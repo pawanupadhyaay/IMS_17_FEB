@@ -1,0 +1,13 @@
+# Googlebot & Crawler Configuration - Samay Watch
+User-agent: *
+Allow: /
+Allow: /all-products
+Allow: /collections/
+Allow: /products/
+Allow: /blog/
+Disallow: /checkout
+Disallow: /account
+Disallow: /wishlist
+
+# Point crawlers directly to the sitemap location
+Sitemap: https://samaywatch.com/sitemap.xml

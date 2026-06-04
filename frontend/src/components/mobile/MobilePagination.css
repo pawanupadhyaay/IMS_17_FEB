@@ -1,0 +1,99 @@
+.mobile-pagination-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  padding-right: 5.5rem; /* Space for FAB (56px + 1.5rem margin) on right side */
+  border-top: 1px solid #e5e7eb;
+  background: #fafafa;
+  pointer-events: auto;
+  -webkit-transform: translateZ(0); /* Force hardware acceleration */
+  transform: translateZ(0);
+  isolation: isolate; /* Create new stacking context */
+}
+
+.mobile-pagination-btn {
+  min-width: 64px;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid #d1d5db;
+  background: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #374151;
+  font-weight: 500;
+  touch-action: manipulation;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1002;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.mobile-pagination-btn:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #4b5563;
+}
+
+.mobile-pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mobile-pagination-pages {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  position: relative;
+  z-index: 1002;
+}
+
+.mobile-pagination-page {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #4b5563;
+  touch-action: manipulation;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1002;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.mobile-pagination-page:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.mobile-pagination-page.active {
+  background: white;
+  border-color: #4b5563;
+  color: #111827;
+  font-weight: 600;
+}
+
+.mobile-pagination-ellipsis {
+  padding: 0 0.25rem;
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
+
+@media (min-width: 769px) {
+  .mobile-pagination-bar {
+    display: none;
+  }
+}
+
+
+
