@@ -34,6 +34,14 @@ const StoreOrders = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const [fulfillmentForm, setFulfillmentForm] = useState({
+    orderStatus: '',
+    awbCode: '',
+    courierName: '',
+    trackingUrl: ''
+  });
+  const [updatingFulfillment, setUpdatingFulfillment] = useState(false);
+
   const fetchOrders = async () => {
     try {
       const res = await storeAdminService.getOrders();
@@ -56,7 +64,38 @@ const StoreOrders = () => {
   }, [searchTerm, activeTab]);
 
   const toggleExpand = (id) => {
-    setExpandedOrderId(expandedOrderId === id ? null : id);
+    const isExpanding = expandedOrderId !== id;
+    setExpandedOrderId(isExpanding ? id : null);
+    if (isExpanding) {
+      const order = orders.find(o => o._id === id);
+      if (order) {
+        setFulfillmentForm({
+          orderStatus: order.orderStatus || 'confirmed',
+          awbCode: order.awbCode || '',
+          courierName: order.courierName || '',
+          trackingUrl: order.trackingUrl || ''
+        });
+      }
+    }
+  };
+
+  const handleUpdateFulfillment = async (orderId) => {
+    try {
+      setUpdatingFulfillment(true);
+      const res = await storeAdminService.updateOrderShipment(orderId, fulfillmentForm);
+      if (res.success) {
+        await fetchOrders();
+        setExpandedOrderId(orderId);
+        alert('Shipment details updated successfully!');
+      } else {
+        alert(res.message || 'Failed to update shipment details');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error updating shipment details');
+    } finally {
+      setUpdatingFulfillment(false);
+    }
   };
 
   // Filter Logic
@@ -308,6 +347,78 @@ const StoreOrders = () => {
                             <p>{order.shippingAddress?.address}</p>
                             {order.shippingAddress?.addressLine2 && <p>{order.shippingAddress?.addressLine2}</p>}
                             <p>{order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}</p>
+                          </div>
+
+                          <div className="sidebar-card">
+                            <h4>Fulfillment & Tracking</h4>
+                            {order.shiprocketOrderId && (
+                              <div className="space-y-1 text-xs mb-3 p-3 rounded bg-neutral-50 border border-neutral-100 animate-fadeIn" style={{ fontSize: '11px', lineHeight: '1.4' }}>
+                                <p className="text-neutral-600 font-bold">Shiprocket Order Registered</p>
+                                <p><strong>ID:</strong> {order.shiprocketOrderId}</p>
+                                {order.awbCode && <p><strong>Shiprocket AWB:</strong> {order.awbCode}</p>}
+                                <p className="text-[10px] text-neutral-400 mt-1">If this order is not being dispatched through Shiprocket, you can override it by entering manual details below:</p>
+                              </div>
+                            )}
+                            <div className="space-y-3" style={{ marginTop: '10px' }}>
+                              <div className="form-group flex flex-col gap-1" style={{ marginBottom: '8px' }}>
+                                <label className="text-[10px] font-black uppercase text-neutral-400">Fulfillment Status</label>
+                                <select 
+                                  className="p-2 border border-neutral-200 rounded text-xs outline-none focus:border-black w-full"
+                                  value={fulfillmentForm.orderStatus}
+                                  onChange={(e) => setFulfillmentForm({ ...fulfillmentForm, orderStatus: e.target.value })}
+                                  style={{ background: 'white', padding: '6px' }}
+                                >
+                                  <option value="confirmed">Confirmed</option>
+                                  <option value="processing">Processing</option>
+                                  <option value="shipped">Shipped</option>
+                                  <option value="out_for_delivery">Out for Delivery</option>
+                                  <option value="delivered">Delivered (Fulfilled)</option>
+                                  <option value="cancelled">Cancelled</option>
+                                </select>
+                              </div>
+                              <div className="form-group flex flex-col gap-1" style={{ marginBottom: '8px' }}>
+                                <label className="text-[10px] font-black uppercase text-neutral-400">Courier Partner</label>
+                                <input 
+                                  type="text" 
+                                  className="p-2 border border-neutral-200 rounded text-xs outline-none focus:border-black w-full"
+                                  placeholder="e.g. DTDC, Delhivery"
+                                  value={fulfillmentForm.courierName}
+                                  onChange={(e) => setFulfillmentForm({ ...fulfillmentForm, courierName: e.target.value })}
+                                  style={{ padding: '6px' }}
+                                />
+                              </div>
+                              <div className="form-group flex flex-col gap-1" style={{ marginBottom: '8px' }}>
+                                <label className="text-[10px] font-black uppercase text-neutral-400">AWB / Tracking Number</label>
+                                <input 
+                                  type="text" 
+                                  className="p-2 border border-neutral-200 rounded text-xs outline-none focus:border-black w-full"
+                                  placeholder="e.g. 123456789"
+                                  value={fulfillmentForm.awbCode}
+                                  onChange={(e) => setFulfillmentForm({ ...fulfillmentForm, awbCode: e.target.value })}
+                                  style={{ padding: '6px' }}
+                                />
+                              </div>
+                              <div className="form-group flex flex-col gap-1" style={{ marginBottom: '12px' }}>
+                                <label className="text-[10px] font-black uppercase text-neutral-400">Tracking Link / URL</label>
+                                <input 
+                                  type="text" 
+                                  className="p-2 border border-neutral-200 rounded text-xs outline-none focus:border-black w-full"
+                                  placeholder="e.g. https://www.dtdc.in/track/..."
+                                  value={fulfillmentForm.trackingUrl}
+                                  onChange={(e) => setFulfillmentForm({ ...fulfillmentForm, trackingUrl: e.target.value })}
+                                  style={{ padding: '6px' }}
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                className="w-full btn-dark py-2 text-xs font-bold uppercase tracking-wider"
+                                onClick={() => handleUpdateFulfillment(order._id)}
+                                disabled={updatingFulfillment}
+                                style={{ padding: '8px', cursor: 'pointer' }}
+                              >
+                                {updatingFulfillment ? 'Saving...' : 'Save Shipment Details'}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>

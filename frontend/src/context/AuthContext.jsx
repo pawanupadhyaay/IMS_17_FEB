@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import api from '../services/api'
 
 export const AuthContext = createContext()
@@ -13,6 +14,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [token, setToken] = useState(getInitialToken)
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     if (token) {
@@ -44,6 +46,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.post('/auth/login', { email, password })
       const { token: newToken, user: userData } = response.data
+
+      queryClient.clear()
 
       if (typeof window !== 'undefined') {
         if (rememberMe) {
@@ -97,6 +101,7 @@ export const AuthProvider = ({ children }) => {
     setToken(null)
     setUser(null)
     delete api.defaults.headers.common['Authorization']
+    queryClient.clear()
   }
 
   return (

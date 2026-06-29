@@ -159,8 +159,8 @@ exports.updateReview = async (req, res) => {
 
 exports.getCustomers = async (req, res) => {
   try {
-    // Exclude owners/admins if necessary. For now fetch standard users.
-    const customers = await User.find({ role: 'User' }).select('-password').sort('-createdAt');
+    // Fetch standard users (case-insensitive for safety)
+    const customers = await User.find({ role: { $in: ['user', 'User'] } }).select('-password').sort('-createdAt');
     res.status(200).json({ success: true, data: customers });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -171,7 +171,8 @@ exports.getCustomers = async (req, res) => {
 exports.getNotificationCounts = async (req, res) => {
   try {
     const ordersCount = await Order.countDocuments({ isRead: { $ne: true } });
-    const queriesCount = await StoreQuery.countDocuments({ isRead: { $ne: true } });
+    const queriesCount = await StoreQuery.countDocuments({ type: "query", isRead: { $ne: true } });
+    const ticketsCount = await StoreQuery.countDocuments({ type: "ticket", isRead: { $ne: true } });
     const reviewsCount = await Review.countDocuments({ isRead: { $ne: true } });
 
     res.status(200).json({
@@ -179,6 +180,7 @@ exports.getNotificationCounts = async (req, res) => {
       data: {
         orders: ordersCount,
         queries: queriesCount,
+        tickets: ticketsCount,
         reviews: reviewsCount
       }
     });
@@ -207,7 +209,12 @@ exports.markOrdersAsRead = async (req, res) => {
 
 exports.markQueriesAsRead = async (req, res) => {
   try {
-    await StoreQuery.updateMany({ isRead: { $ne: true } }, { isRead: true });
+    const { type } = req.body;
+    const filter = { isRead: { $ne: true } };
+    if (type) {
+      filter.type = type;
+    }
+    await StoreQuery.updateMany(filter, { isRead: true });
     res.status(200).json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -346,6 +353,52 @@ exports.deleteStaff = async (req, res) => {
 
     await User.findByIdAndDelete(req.params.id);
     res.status(200).json({ success: true, message: "Staff member deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// --- UPDATE ORDER SHIPMENT ---
+exports.updateOrderShipment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { orderStatus, awbCode, courierName, trackingUrl } = req.body;
+
+    const order = await Order.findById(id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    if (orderStatus) {
+      // If the status is being updated to cancelled, and it has a Shiprocket ID, trigger cancellation on Shiprocket
+      if (orderStatus === 'cancelled' && order.orderStatus !== 'cancelled' && order.shiprocketOrderId) {
+        try {
+          const shiprocketService = require('../services/shiprocketService');
+          await shiprocketService.cancelShiprocketOrder(order.shiprocketOrderId);
+        } catch (srErr) {
+          console.error("Failed to cancel order on Shiprocket during manual status update:", srErr.message);
+        }
+      }
+      order.orderStatus = orderStatus;
+    }
+
+    if (awbCode !== undefined) order.awbCode = awbCode;
+    if (courierName !== undefined) order.courierName = courierName;
+    if (trackingUrl !== undefined) order.trackingUrl = trackingUrl;
+
+    await order.save();
+
+    // Trigger email notification for status/transit updates
+    if (orderStatus === 'shipped' || orderStatus === 'out_for_delivery' || orderStatus === 'delivered' || (awbCode && order.orderStatus === 'shipped')) {
+      try {
+        const emailService = require('../utils/emailService');
+        await emailService.sendTransitUpdate(order);
+      } catch (mailErr) {
+        console.error("Failed to send manual shipment email:", mailErr.message);
+      }
+    }
+
+    res.status(200).json({ success: true, message: "Order shipment updated successfully", data: order });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

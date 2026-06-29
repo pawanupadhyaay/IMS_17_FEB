@@ -88,7 +88,7 @@ const orderSchema = new mongoose.Schema(
 
     orderStatus: {
       type: String,
-      enum: ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"],
+      enum: ["pending", "confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled"],
       default: "pending",
     },
 
@@ -107,6 +107,7 @@ const orderSchema = new mongoose.Schema(
 
     awbCode: String,
     courierName: String,
+    trackingUrl: String,
 
     subtotal: {
       type: Number,

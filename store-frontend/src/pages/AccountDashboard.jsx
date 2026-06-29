@@ -27,6 +27,37 @@ export default function AccountDashboard() {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
+  // Shiprocket Live Tracking State
+  const [trackingInfo, setTrackingInfo] = useState(null);
+  const [loadingTracking, setLoadingTracking] = useState(false);
+  const [trackingError, setTrackingError] = useState('');
+
+  // Fetch live tracking details from Shiprocket
+  useEffect(() => {
+    if (selectedOrder) {
+      const fetchTracking = async () => {
+        try {
+          setLoadingTracking(true);
+          setTrackingError('');
+          setTrackingInfo(null);
+          const res = await storeOrderService.getOrderTracking(selectedOrder._id);
+          if (res.success) {
+            setTrackingInfo(res);
+          } else {
+            setTrackingError(res.message || 'Could not fetch tracking data');
+          }
+        } catch (err) {
+          setTrackingError(err.response?.data?.message || 'Failed to retrieve shipment updates');
+        } finally {
+          setLoadingTracking(false);
+        }
+      };
+      fetchTracking();
+    } else {
+      setTrackingInfo(null);
+    }
+  }, [selectedOrder]);
+
   // Profile Form State
   const [profileForm, setProfileForm] = useState({
     name: user?.name || '',
@@ -298,7 +329,9 @@ export default function AccountDashboard() {
         lastName,
         email: user.email,
         mobile: user.mobile || '0000000000',
-        message: queryForm.message
+        message: queryForm.message,
+        type: 'ticket',
+        userId: user._id
       });
 
       if (res.success) {
@@ -396,6 +429,7 @@ export default function AccountDashboard() {
         'confirmed': 1,
         'processing': 1,
         'shipped': 2,
+        'out_for_delivery': 2,
         'delivered': 3,
         'cancelled': -1
       };
@@ -451,7 +485,40 @@ export default function AccountDashboard() {
 
         {/* Visual Tracking Progress Timeline */}
         <div className="bg-white rounded-2xl border border-neutral-200 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-          <h3 className="text-xs font-black uppercase tracking-widest text-neutral-400 mb-8">Delivery Progress</h3>
+          <div className="flex items-center justify-between mb-8 border-b border-neutral-100 pb-4">
+            <h3 className="text-xs font-black uppercase tracking-widest text-neutral-400">Delivery Progress</h3>
+            {(trackingInfo || order.awbCode) && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-black text-white shadow-sm">
+                <Truck className="w-3 h-3 text-gold" />
+                {trackingInfo?.status || (order.orderStatus === 'shipped' ? 'In Transit' : order.orderStatus === 'out_for_delivery' ? 'Out for Delivery' : order.orderStatus === 'delivered' ? 'Delivered' : 'Processing')}
+              </span>
+            )}
+          </div>
+
+          {/* Custom Tracking / Courier details if dispatched outside Shiprocket */}
+          {order.awbCode && (
+            <div className="mb-6 p-4 rounded-xl bg-neutral-50 border border-neutral-100 flex flex-wrap items-center justify-between gap-4">
+              <div className="space-y-1">
+                <p className="text-[9px] font-black uppercase text-neutral-400 tracking-wider">Courier Partner</p>
+                <p className="text-xs font-bold text-neutral-800">{order.courierName || 'Custom Partner'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[9px] font-black uppercase text-neutral-400 tracking-wider">AWB Number</p>
+                <p className="text-xs font-black text-neutral-900 tracking-wider">{order.awbCode}</p>
+              </div>
+              {order.trackingUrl && (
+                <a 
+                  href={order.trackingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-black px-4 py-2 text-[11px] font-black uppercase tracking-widest text-white hover:bg-neutral-800 transition-all active:scale-95 shadow-sm"
+                >
+                  <Truck className="w-3.5 h-3.5 text-gold" />
+                  Track on Courier Website
+                </a>
+              )}
+            </div>
+          )}
           
           {isCancelled ? (
             <div className="flex items-center gap-4 p-4 bg-red-50 rounded-xl border border-red-100 text-red-700">
@@ -461,7 +528,62 @@ export default function AccountDashboard() {
                 <p className="text-xs text-red-500 mt-0.5 font-medium">Please contact support or concierge at orders@samaywatch.in if you require assistance.</p>
               </div>
             </div>
+          ) : loadingTracking ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <Loader2 className="w-8 h-8 text-neutral-900 animate-spin" />
+              <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest animate-pulse">Fetching live tracking updates...</p>
+            </div>
+          ) : trackingInfo && trackingInfo.trackingSteps && trackingInfo.trackingSteps.length > 0 ? (
+            /* Shiprocket Live Tracking Timeline */
+            <div className="relative py-2 space-y-8">
+              {/* Connecting vertical line */}
+              <div className="absolute left-[11px] top-4 bottom-4 w-[2px] bg-neutral-100 rounded-full" />
+
+              {trackingInfo.trackingSteps.map((step, idx) => {
+                const isCompleted = step.status === 'completed';
+                const isCurrent = step.status === 'in-transit' || (!isCompleted && idx === 0) || (idx > 0 && trackingInfo.trackingSteps[idx - 1].status === 'completed' && step.status !== 'completed');
+
+                return (
+                  <div key={idx} className="relative flex gap-4 items-start animate-fadeIn">
+                    {/* Visual Node Pin (aligned with vertical line) */}
+                    <div className="z-10 shrink-0 w-6 h-6 flex items-center justify-center">
+                      {isCompleted ? (
+                        <div className="w-6 h-6 rounded-full bg-black border-2 border-black flex items-center justify-center text-white shadow-md">
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                        </div>
+                      ) : isCurrent ? (
+                        <div className="w-6 h-6 rounded-full bg-white border-2 border-neutral-900 flex items-center justify-center text-neutral-900 ring-4 ring-neutral-100 animate-pulse">
+                          <span className="w-2 h-2 rounded-full bg-black" />
+                        </div>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-white border-2 border-neutral-200 flex items-center justify-center text-neutral-300">
+                          <span className="w-2 h-2 rounded-full bg-neutral-200" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Step description detail */}
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-baseline gap-2">
+                        <p className={`text-[12px] font-black uppercase tracking-wider ${isCompleted || isCurrent ? 'text-black font-extrabold' : 'text-neutral-400'}`}>
+                          {step.activity}
+                        </p>
+                        {step.date && (
+                          <span className="text-[10px] text-neutral-400 font-semibold">
+                            {new Date(step.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] font-medium text-neutral-500 mt-1 uppercase tracking-wide">
+                        {step.location || 'Hub Facility'}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
+            /* Fallback Original Static Progress Timeline */
             <div className="relative pt-4 pb-4 px-2">
               {/* Horizontal Line behind steps */}
               <div className="absolute top-[36px] left-[12.5%] right-[12.5%] h-[2px] bg-neutral-100 -translate-y-1/2 hidden md:block rounded-full">
@@ -487,7 +609,6 @@ export default function AccountDashboard() {
                   
                   return (
                     <div key={idx} className="flex md:flex-col items-center gap-4 md:gap-3 md:text-center flex-1 relative z-10 w-full md:w-auto">
-                      {/* Circle icon */}
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 shrink-0 ${
                         isCompleted 
                           ? 'bg-black border-black text-white shadow-md' 
@@ -502,7 +623,6 @@ export default function AccountDashboard() {
                         )}
                       </div>
 
-                      {/* Step Labels */}
                       <div>
                         <p className={`text-[11px] font-black uppercase tracking-widest ${
                           isCompleted ? 'text-black font-extrabold' : 'text-neutral-400'
@@ -1363,6 +1483,14 @@ export default function AccountDashboard() {
                                 <p className="text-xs text-neutral-700 font-medium leading-relaxed whitespace-pre-line bg-neutral-50/50 p-3 rounded-xl border border-neutral-50">
                                   {q.message}
                                 </p>
+                                {q.response && (
+                                  <div className="pl-4 border-l-2 border-gold/40 py-1 space-y-1 mt-1">
+                                    <span className="text-[9px] font-black text-gold uppercase tracking-widest block">Concierge Response</span>
+                                    <p className="text-xs text-neutral-800 font-bold leading-relaxed whitespace-pre-line">
+                                      {q.response}
+                                    </p>
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>

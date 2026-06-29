@@ -44,11 +44,11 @@ async function fetchProductBySlug(slug) {
   const encoded = encodeURIComponent(slug)
   const isObjectId = /^[0-9a-fA-F]{24}$/.test(slug)
   const urls = []
-  
+
   if (isObjectId) {
     urls.push(`${API_BASE}/api/store/products/${encoded}`)
   }
-  
+
   urls.push(`${API_BASE}/api/store/products/slug/${encoded}`)
   urls.push(`${API_BASE}/api/store/products?slug=${encoded}&limit=1&page=1`)
 
@@ -94,9 +94,9 @@ function RecommendedCard({ product, brandMap = {} }) {
           toggleWishlist(product)
         }}
       >
-        <Heart 
-          className={cn("size-4 sm:size-5 transition-all duration-300", isInWishlist(product._id) ? "fill-red-500 text-red-500" : "text-neutral-400")} 
-          strokeWidth={1.5} 
+        <Heart
+          className={cn("size-4 sm:size-5 transition-all duration-300", isInWishlist(product._id) ? "fill-red-500 text-red-500" : "text-neutral-400")}
+          strokeWidth={1.5}
         />
       </button>
       <div className={cn(
@@ -172,12 +172,12 @@ export default function ProductDetail() {
   const [recommended, setRecommended] = useState([])
   const [showStickyBar, setShowStickyBar] = useState(false)
   const [flyingImage, setFlyingImage] = useState(null)
-  
+
   const [openSpecs, setOpenSpecs] = useState(true)
   const [openAccordion, setOpenAccordion] = useState('description')
   const [openFaq, setOpenFaq] = useState(null)
-  const [brandMap, setBrandMap] = useState({}) 
-  
+  const [brandMap, setBrandMap] = useState({})
+
   const { toggleWishlist } = useWishlist()
   const { addToCart: globalAddToCart, initiateCheckout: globalInitiateCheckout } = useCart()
   const { user, openAuthModal } = useAuth()
@@ -199,7 +199,7 @@ export default function ProductDetail() {
           setBrandMap(mapping)
         }
       })
-      .catch(() => {})
+      .catch(() => { })
   }, [])
 
   useEffect(() => {
@@ -294,7 +294,7 @@ export default function ProductDetail() {
         jsonLdScript.setAttribute('type', 'application/ld+json');
         document.head.appendChild(jsonLdScript);
       }
-      
+
       const schemaData = {
         "@context": "https://schema.org/",
         "@type": "Product",
@@ -401,7 +401,7 @@ export default function ProductDetail() {
     };
 
     if (navigator.share) {
-      navigator.share(shareData).catch(() => {});
+      navigator.share(shareData).catch(() => { });
     } else {
       navigator.clipboard.writeText(window.location.href).then(() => {
         toast.success("Product link copied to clipboard", {
@@ -447,26 +447,26 @@ export default function ProductDetail() {
           <span className="mx-2 opacity-30">/</span>
           <span className="text-neutral-900 font-bold">{product.title}</span>
         </nav>
- 
-        <section className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-start lg:gap-12 xl:gap-20 lg:pb-12">
-          <div className="lg:sticky lg:top-24">
+
+        <section className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,_1.2fr)_minmax(0,_1fr)] lg:items-start lg:gap-12 xl:gap-20 lg:pb-12">
+          <div className="lg:sticky lg:top-24 w-full min-w-0">
             <ProductImageGallery product={product} title={product.title || ''} />
           </div>
- 
+
           <div className="flex flex-col">
             {/* Header Block — Tightered for Above the Fold */}
-            <div className="flex flex-col border-b border-neutral-100 pb-5">
+            <div className="flex flex-col border-b border-neutral-100 pb-4">
               <div className="mb-2 flex items-center justify-between">
                 <p className="font-poppins text-[11px] font-bold uppercase tracking-[0.2em] text-neutral-400">
                   {product.brand || 'BRAND'}
                 </p>
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50/50 px-2 py-0.5 rounded">
-                    <svg className="size-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <svg className="size-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
                     Bestseller
                   </span>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={handleNativeShare}
                     className="cursor-pointer text-neutral-300 hover:text-black transition-colors"
                   >
@@ -475,24 +475,35 @@ export default function ProductDetail() {
                 </div>
               </div>
 
-              <h1 className="max-w-[98%] font-poppins text-[20px] sm:text-[24px] lg:text-[28px] font-bold leading-tight text-black tracking-tight truncate" title={product.title}>
+              <h1 className="max-w-[98%] font-poppins text-[16px] sm:text-[18px] lg:text-[22px] font-bold leading-tight text-black tracking-tight" title={product.title}>
                 {product.title || '—'}
               </h1>
 
               {/* SKU Display */}
               {(product.sku || product._id) && (
-                <div className="mt-2 flex items-center">
+                <div className="mt-2 flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-400">
                     SKU: <span className="text-neutral-900 ml-1">{product.sku || product._id.slice(-8).toUpperCase()}</span>
                   </span>
+                  
+                  {/* Ratings inline on desktop - on the right of SKU row, shifted slightly left */}
+                  <div className="hidden lg:flex items-center gap-2.5 lg:mr-16">
+                    <span className="text-[12px] font-bold text-black flex items-center gap-1">
+                      4.9 ★
+                    </span>
+                    <div className="h-3 w-px bg-neutral-300" />
+                    <span className="text-[12px] text-neutral-400 font-medium">
+                      <span className="text-black underline cursor-pointer hover:text-neutral-700">124 Reviews</span>
+                    </span>
+                  </div>
                 </div>
               )}
 
               {/* Stock Indicator & Ratings Row */}
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                 {product.inventory > 0 && product.inventory <= 2 ? (
-                  <motion.div 
-                    initial={{ opacity: 0, x: -10 }} 
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="flex items-center gap-2"
                   >
@@ -510,8 +521,8 @@ export default function ProductDetail() {
                 ) : (
                   <div></div>
                 )}
- 
-                <div className="flex items-center gap-2">
+
+                <div className="flex lg:hidden items-center gap-2">
                   <div className="flex items-center gap-1.5 rounded-full bg-neutral-900 px-3 py-1 text-[11px] font-bold text-white shadow-sm">
                     ★ 4.9
                   </div>
@@ -522,7 +533,7 @@ export default function ProductDetail() {
               </div>
             </div>
             {/* Price Block — Compact for Above the Fold */}
-            <div className="mt-5 flex flex-col gap-0 border-b border-neutral-100 pb-5">
+            <div className="mt-4 flex flex-col gap-0 border-b border-neutral-100 pb-4">
               <div className="flex flex-wrap items-baseline gap-3">
                 <p className="font-poppins text-[28px] lg:text-[34px] font-bold tracking-tight text-black">
                   {formatPrice(product.price)}
@@ -546,7 +557,7 @@ export default function ProductDetail() {
             </div>
 
             {/* Action Buttons — Horizontal Layout on Desktop */}
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+            <div className="mt-4 flex flex-col sm:flex-row gap-3 max-w-[450px]">
               {isInquiryOnlyBrand ? (
                 <button
                   type="button"
@@ -568,9 +579,9 @@ export default function ProductDetail() {
                       initiateCheckout(true);
                     }}
                     className={cn(
-                      "cursor-pointer w-full sm:w-[160px] min-h-[52px] rounded-lg border-2 py-3.5 text-[12px] font-bold uppercase tracking-widest transition-all active:scale-[0.98]",
-                      product.inventory <= 0 
-                        ? "border-neutral-200 text-neutral-400 cursor-not-allowed bg-neutral-50" 
+                      "cursor-pointer w-full sm:flex-1 min-h-[52px] rounded-lg border-2 py-3.5 text-[12px] font-bold uppercase tracking-widest transition-all active:scale-[0.98]",
+                      product.inventory <= 0
+                        ? "border-neutral-200 text-neutral-400 cursor-not-allowed bg-neutral-50"
                         : "border-black bg-white text-black hover:bg-neutral-50"
                     )}
                     disabled={product.inventory <= 0}
@@ -588,8 +599,8 @@ export default function ProductDetail() {
                     }}
                     className={cn(
                       "cursor-pointer flex-1 min-h-[52px] flex items-center justify-center gap-3 rounded-lg py-3.5 text-[12px] font-bold uppercase tracking-widest text-white shadow-[0_12px_30px_rgb(0,0,0,0.1)] transition-all active:scale-[0.98]",
-                      product.inventory <= 0 
-                        ? "bg-neutral-400 cursor-not-allowed shadow-none" 
+                      product.inventory <= 0
+                        ? "bg-neutral-400 cursor-not-allowed shadow-none"
                         : "bg-black lg:hover:translate-y-[-2px] lg:hover:bg-neutral-900"
                     )}
                     disabled={product.inventory <= 0}
@@ -604,130 +615,140 @@ export default function ProductDetail() {
 
 
             {/* Trust Badges — Compact Grid */}
-            <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-neutral-100 pt-8 text-[11px] font-semibold uppercase tracking-[0.1em] text-neutral-500">
-              <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-full bg-neutral-50 text-gold shadow-sm">
-                  <ShieldCheck className="size-5" />
+            <div className="mt-8 lg:mt-5 grid grid-cols-2 lg:grid-cols-4 gap-x-4 lg:gap-x-2 gap-y-3 lg:gap-y-0 border-t border-neutral-100 pt-8 lg:pt-5 text-[11px] lg:text-[9.5px] font-semibold uppercase tracking-[0.1em] text-neutral-500">
+              <div className="flex items-center gap-3 lg:gap-2">
+                <div className="flex size-9 lg:size-7 items-center justify-center rounded-full bg-neutral-50 text-gold shadow-sm shrink-0">
+                  <ShieldCheck className="size-5 lg:size-4" />
                 </div>
-                {product.warrantyPeriod ? `${product.warrantyPeriod} Warranty` : '2 Year Warranty'}
+                <span className="leading-tight">{product.warrantyPeriod ? `${product.warrantyPeriod} Warranty` : '2 Year Warranty'}</span>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-full bg-neutral-50 text-gold shadow-sm">
-                   <Truck className="size-5" />
+              <div className="flex items-center gap-3 lg:gap-2">
+                <div className="flex size-9 lg:size-7 items-center justify-center rounded-full bg-neutral-50 text-gold shadow-sm shrink-0">
+                  <Truck className="size-5 lg:size-4" />
                 </div>
-                Pan India Delivery
+                <span className="leading-tight">Pan India Delivery</span>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-full bg-neutral-50 text-gold shadow-sm">
-                   <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z" /></svg>
+              <div className="flex items-center gap-3 lg:gap-2">
+                <div className="flex size-9 lg:size-7 items-center justify-center rounded-full bg-neutral-50 text-gold shadow-sm shrink-0">
+                  <svg className="size-5 lg:size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z" /></svg>
                 </div>
-                7-Day Returns
+                <span className="leading-tight">7-Day Returns</span>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-full bg-neutral-50 text-gold shadow-sm">
-                   <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+              <div className="flex items-center gap-3 lg:gap-2">
+                <div className="flex size-9 lg:size-7 items-center justify-center rounded-full bg-neutral-50 text-gold shadow-sm shrink-0">
+                  <svg className="size-5 lg:size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                 </div>
-                Secure Payments
+                <span className="leading-tight">Secure Payments</span>
               </div>
             </div>
 
             {/* Dynamic Product Specifications Accordion */}
             {specificationFields.some(f => f.value) && (
               <div className="mt-12 border-t border-neutral-100">
-                  <button
-                    type="button"
-                    onClick={() => setOpenSpecs(!openSpecs)}
-                    className="flex w-full items-center justify-between py-6 text-left"
-                  >
-                    <span className="font-poppins text-[13px] font-black tracking-[0.25em] uppercase text-neutral-400">Technical Specifications</span>
-                    <div className={cn("size-6 flex items-center justify-center shrink-0 transition-transform duration-300", openSpecs ? "rotate-180" : "")}>
-                       <svg className="size-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                    </div>
-                  </button>
-                  <AnimatePresence>
-                    {openSpecs && (
-                      <motion.div 
-                        initial={{ height: 0, opacity: 0 }} 
-                        animate={{ height: 'auto', opacity: 1 }} 
-                        exit={{ height: 0, opacity: 0 }} 
-                        className="overflow-hidden"
-                      >
-                        {/* Premium Spec Dashboard */}
-                        <div className="grid grid-cols-2 gap-4 pb-10 mb-8 border-b border-neutral-100">
-                          {product?.caseShape && (
-                            <div className="group flex flex-col items-center justify-center text-center gap-3 rounded-2xl bg-neutral-50/50 p-5 transition-colors hover:bg-neutral-50">
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Case Shape</span>
-                              <div className="size-12 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-600 bg-white shadow-sm transition-transform group-hover:scale-110">
-                                <svg className="size-5 font-light stroke-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="8" strokeDasharray="2 2"></circle></svg>
-                              </div>
-                              <span className="font-poppins text-[13px] font-black text-black uppercase tracking-wider">{product.caseShape}</span>
+                <button
+                  type="button"
+                  onClick={() => setOpenSpecs(!openSpecs)}
+                  className="flex w-full items-center justify-between py-6 text-left"
+                >
+                  <span className="font-poppins text-[13px] font-black tracking-[0.25em] uppercase text-neutral-400">Technical Specifications</span>
+                  <div className={cn("size-6 flex items-center justify-center shrink-0 transition-transform duration-300", openSpecs ? "rotate-180" : "")}>
+                    <svg className="size-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                  </div>
+                </button>
+                <AnimatePresence>
+                  {openSpecs && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      {/* Premium Spec Dashboard */}
+                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-4 pb-10 mb-8 border-b border-neutral-100">
+                        {product?.caseShape && (
+                          <div className="group flex flex-col items-center justify-center text-center gap-3 py-2">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Case Shape</span>
+                            <div className="size-12 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-600 bg-white shadow-sm transition-transform group-hover:scale-110">
+                              <svg className="size-5 font-light stroke-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="8" strokeDasharray="2 2"></circle></svg>
                             </div>
-                          )}
-                          {(product?.caseSize || product?.dialDiameter) && (
-                            <div className="group flex flex-col items-center justify-center text-center gap-3 rounded-2xl bg-neutral-50/50 p-5 transition-colors hover:bg-neutral-50">
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Diameter</span>
-                              <div className="size-12 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-600 bg-white shadow-sm transition-transform group-hover:scale-110">
-                                <svg className="size-5 font-light stroke-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 12H6m0 0l3-3m-3 3l3 3m9-3l-3-3m3 3l-3 3"></path><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>
-                              </div>
-                              <span className="font-poppins text-[13px] font-black text-black uppercase tracking-wider">{product.caseSize || product.dialDiameter}</span>
+                            <span className="font-poppins text-[13px] font-black text-black uppercase tracking-wider">{product.caseShape}</span>
+                          </div>
+                        )}
+                        {(product?.caseSize || product?.dialDiameter) && (
+                          <div className="group flex flex-col items-center justify-center text-center gap-3 py-2">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Dial Diameter</span>
+                            <div className="size-12 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-600 bg-white shadow-sm transition-transform group-hover:scale-110">
+                              <svg className="size-5 font-light stroke-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 12H6m0 0l3-3m-3 3l3 3m9-3l-3-3m3 3l-3 3"></path><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>
                             </div>
-                          )}
-                          {product?.movement && (
-                            <div className="group flex flex-col items-center justify-center text-center gap-3 rounded-2xl bg-neutral-50/50 p-5 transition-colors hover:bg-neutral-50">
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Movement</span>
-                              <div className="size-12 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-600 bg-white shadow-sm transition-transform group-hover:scale-110">
-                                <svg className="size-5 font-light stroke-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                              </div>
-                              <span className="font-poppins text-[13px] font-black text-black uppercase tracking-wider">{product.movement}</span>
+                            <span className="font-poppins text-[13px] font-black text-black uppercase tracking-wider">{product.caseSize || product.dialDiameter}</span>
+                          </div>
+                        )}
+                        {product?.movement && (
+                          <div className="group flex flex-col items-center justify-center text-center gap-3 py-2">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Movement</span>
+                            <div className="size-12 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-600 bg-white shadow-sm transition-transform group-hover:scale-110">
+                              <svg className="size-5 font-light stroke-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                             </div>
-                          )}
-                          {product?.gender && (
-                            <div className="group flex flex-col items-center justify-center text-center gap-3 rounded-2xl bg-neutral-50/50 p-5 transition-colors hover:bg-neutral-50">
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Gender</span>
-                              <div className="size-12 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-600 bg-white shadow-sm transition-transform group-hover:scale-110">
-                                <svg className="size-5 font-light stroke-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10" cy="10" r="5"></circle><line x1="14" y1="14" x2="20" y2="20"></line><line x1="14" y1="20" x2="20" y2="14"></line><line x1="10" y1="15" x2="10" y2="21"></line><line x1="7" y1="18" x2="13" y2="18"></line></svg>
-                              </div>
-                              <span className="font-poppins text-[13px] font-black text-black uppercase tracking-wider">{product.gender}</span>
+                            <span className="font-poppins text-[13px] font-black text-black uppercase tracking-wider">{product.movement}</span>
+                          </div>
+                        )}
+                        {product?.gender && (
+                          <div className="group flex flex-col items-center justify-center text-center gap-3 py-2">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Gender</span>
+                            <div className="size-12 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-600 bg-white shadow-sm transition-transform group-hover:scale-110">
+                              <svg className="size-5 font-light stroke-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10" cy="10" r="5"></circle><line x1="14" y1="14" x2="20" y2="20"></line><line x1="14" y1="20" x2="20" y2="14"></line><line x1="10" y1="15" x2="10" y2="21"></line><line x1="7" y1="18" x2="13" y2="18"></line></svg>
                             </div>
-                          )}
-                        </div>
+                            <span className="font-poppins text-[13px] font-black text-black uppercase tracking-wider">{product.gender}</span>
+                          </div>
+                        )}
+                        {product?.caseMaterial && (
+                          <div className="group flex flex-col items-center justify-center text-center gap-3 py-2">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Case Material</span>
+                            <div className="size-12 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-600 bg-white shadow-sm transition-transform group-hover:scale-110">
+                              <svg className="size-5 font-light stroke-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                            </div>
+                            <span className="font-poppins text-[13px] font-black text-black uppercase tracking-wider">{product.caseMaterial}</span>
+                          </div>
+                        )}
+                        {product?.dialColor && (
+                          <div className="group flex flex-col items-center justify-center text-center gap-3 py-2">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">Dial Colour</span>
+                            <div className="size-12 rounded-full border border-neutral-200 flex items-center justify-center text-neutral-600 bg-white shadow-sm transition-transform group-hover:scale-110">
+                              <svg className="size-5 font-light stroke-[1.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}><path d="M12 22a7 7 0 0 0 7-7c0-4.3-7-13-7-13S5 10.7 5 15a7 7 0 0 0 7 7z"></path></svg>
+                            </div>
+                            <span className="font-poppins text-[13px] font-black text-black uppercase tracking-wider">{product.dialColor}</span>
+                          </div>
+                        )}
+                      </div>
 
-                        {/* Detailed Horological List */}
-                        <div className="flex flex-col gap-0 pb-8">
-                           {specificationFields.filter(f => f.value).map((spec, idx) => {
-                             const skippedLabels = ['Case Shape', 'Case Size', 'Movement', 'Gender', 'Case Material'];
-                             if (skippedLabels.includes(spec.label)) return null;
-                             
-                             return (
-                               <div key={idx} className="flex justify-between items-center w-full py-4 border-b border-neutral-50 last:border-0">
-                                 <span className="text-[12px] font-bold uppercase tracking-widest text-neutral-400">{spec.label}</span>
-                                 <span className="font-poppins text-[13px] font-black tracking-wide text-black uppercase">{spec.value}</span>
-                               </div>
-                             );
-                           })}
-                           {/* Brand Cohesion Extras */}
-                           {!product?.dialColor && (
-                             <div className="flex justify-between items-center w-full py-4 border-b border-neutral-50">
-                               <span className="text-[12px] font-bold uppercase tracking-widest text-neutral-400">Dial Colour</span>
-                               <span className="font-poppins text-[13px] font-black tracking-wide text-black uppercase">Deep Blue</span>
-                             </div>
-                           )}
+                      {/* Detailed Horological List */}
+                      <div className="flex flex-col gap-0 pb-8">
+                        {specificationFields.filter(f => f.value).map((spec, idx) => {
+                          const skippedLabels = ['Case Shape', 'Case Size', 'Movement', 'Gender', 'Case Material', 'Dial Color'];
+                          if (skippedLabels.includes(spec.label)) return null;
 
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
-            </div>
-          </section>
+                          return (
+                            <div key={idx} className="flex justify-between items-center w-full py-4 border-b border-neutral-50 last:border-0">
+                              <span className="text-[12px] font-bold uppercase tracking-widest text-neutral-400">{spec.label}</span>
+                              <span className="font-poppins text-[13px] font-black tracking-wide text-black uppercase">{spec.value}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
+        </section>
 
         {/* Watch Highlights Grid — same data */}
         <section className="mt-6 sm:mt-10 lg:mt-12 border-y border-neutral-100 py-10 sm:py-14 lg:py-16">
           <div className="grid grid-cols-2 gap-6 sm:gap-8 md:grid-cols-3 px-4 sm:px-6 lg:px-12">
             <div className="flex flex-col items-center text-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#fbfbfb] text-black">
-                 <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
               </div>
               <div>
                 <h4 className="font-bold text-black text-[13px] uppercase tracking-widest">Premium Movement</h4>
@@ -736,7 +757,7 @@ export default function ProductDetail() {
             </div>
             <div className="flex flex-col items-center text-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#fbfbfb] text-black">
-                 <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
               </div>
               <div>
                 <h4 className="font-bold text-black text-[13px] uppercase tracking-widest">Water Resistance</h4>
@@ -745,7 +766,7 @@ export default function ProductDetail() {
             </div>
             <div className="flex flex-col items-center text-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#fbfbfb] text-black">
-                 <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
               </div>
               <div>
                 <h4 className="font-bold text-black text-[13px] uppercase tracking-widest">{product?.caseMaterial || 'Stainless Steel'}</h4>
@@ -758,48 +779,48 @@ export default function ProductDetail() {
         {/* Luxury Storytelling — same data */}
         <section className="mt-16 sm:mt-20 lg:mt-24 grid grid-cols-1 items-center gap-8 sm:gap-12 lg:grid-cols-2 lg:gap-24">
           <div className="h-[320px] sm:h-[420px] lg:h-[700px] w-full overflow-hidden bg-[#fbfbfb] rounded-xl sm:rounded-2xl flex items-center justify-center p-6 sm:p-8">
-             <img 
-               src={getSquareImage(
-                 (() => {
-                   const img = product.images?.[0] || product.image?.url;
-                   return typeof img === 'string' ? img : img?.url;
-                 })()
-               )} 
-               alt={`${product.brand} ${product.title} Craftsmanship`} 
-               className="h-full w-full object-contain mix-blend-multiply transition-transform duration-1000 hover:scale-[1.15]" 
-               loading="lazy" 
-               onError={(e) => {
-                 const currentSrc = e.currentTarget.src;
-                 const imageUrl = product.images?.[0] || product.image?.url;
-                 if (currentSrc.includes('res.cloudinary.com') && imageUrl) {
-                   e.currentTarget.src = imageUrl;
-                 } else if (imageUrl && currentSrc === imageUrl) {
-                   const SAFE_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800' viewBox='0 0 800 800'%3E%3Crect width='800' height='800' fill='%23f3f4f6'/%3E%3Cpath d='M400 300a50 50 0 1 0 0 100 50 50 0 0 0 0-100zm-150 200h300l-75-100-75 100-50-60-100 60z' fill='%239ca3af'/%3E%3Ctext x='400' y='550' font-family='sans-serif' font-size='18' text-anchor='middle' fill='%239ca3af'%3EImage not available%3C/text%3E%3C/svg%3E";
-                   e.currentTarget.src = SAFE_PLACEHOLDER;
-                 }
-               }}
-             />
+            <img
+              src={getSquareImage(
+                (() => {
+                  const img = product.images?.[0] || product.image?.url;
+                  return typeof img === 'string' ? img : img?.url;
+                })()
+              )}
+              alt={`${product.brand} ${product.title} Craftsmanship`}
+              className="h-full w-full object-contain mix-blend-multiply transition-transform duration-1000 hover:scale-[1.15]"
+              loading="lazy"
+              onError={(e) => {
+                const currentSrc = e.currentTarget.src;
+                const imageUrl = product.images?.[0] || product.image?.url;
+                if (currentSrc.includes('res.cloudinary.com') && imageUrl) {
+                  e.currentTarget.src = imageUrl;
+                } else if (imageUrl && currentSrc === imageUrl) {
+                  const SAFE_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800' viewBox='0 0 800 800'%3E%3Crect width='800' height='800' fill='%23f3f4f6'/%3E%3Cpath d='M400 300a50 50 0 1 0 0 100 50 50 0 0 0 0-100zm-150 200h300l-75-100-75 100-50-60-100 60z' fill='%239ca3af'/%3E%3Ctext x='400' y='550' font-family='sans-serif' font-size='18' text-anchor='middle' fill='%239ca3af'%3EImage not available%3C/text%3E%3C/svg%3E";
+                  e.currentTarget.src = SAFE_PLACEHOLDER;
+                }
+              }}
+            />
           </div>
           <div className="flex flex-col justify-center px-0 sm:px-4 lg:pr-16">
-             <h2 className="font-serif text-[28px] sm:text-[38px] md:text-[56px] font-black leading-[1.1] text-black">Crafted for Precision.<br/>Designed for Presence.</h2>
-             <div className="mt-10 h-[2px] w-16 bg-gold"></div>
-             <p className="mt-10 text-[16px] leading-relaxed text-neutral-500 font-medium">
-               Every timepiece in our collection represents the pinnacle of horological engineering. Hand-assembled with meticulous attention to detail, the {product.title || 'watch'} combines timeless elegance with uncompromising durability.
-             </p>
-             <p className="mt-6 text-[16px] leading-relaxed text-neutral-500 font-medium">
-               Whether commanding a boardroom or exploring the depths, the exquisite sapphire crystal and surgical-grade stainless steel ensure your legacy endures for generations. It is not just a mechanism to track time; it is a profound statement of personal style and enduring success.
-             </p>
+            <h2 className="font-serif text-[28px] sm:text-[38px] md:text-[56px] font-black leading-[1.1] text-black">Crafted for Precision.<br />Designed for Presence.</h2>
+            <div className="mt-10 h-[2px] w-16 bg-gold"></div>
+            <p className="mt-10 text-[16px] leading-relaxed text-neutral-500 font-medium">
+              Every timepiece in our collection represents the pinnacle of horological engineering. Hand-assembled with meticulous attention to detail, the {product.title || 'watch'} combines timeless elegance with uncompromising durability.
+            </p>
+            <p className="mt-6 text-[16px] leading-relaxed text-neutral-500 font-medium">
+              Whether commanding a boardroom or exploring the depths, the exquisite sapphire crystal and surgical-grade stainless steel ensure your legacy endures for generations. It is not just a mechanism to track time; it is a profound statement of personal style and enduring success.
+            </p>
           </div>
         </section>
 
         {/* Wrist Experience Parallax — same data */}
         <section className="mt-16 sm:mt-24 lg:mt-32 relative h-[40vh] sm:h-[60vh] md:h-[80vh] w-screen left-1/2 -ml-[50vw] overflow-hidden flex items-center justify-center">
           <div className="absolute inset-0">
-            <video 
-              autoPlay 
-              muted 
-              loop 
-              playsInline 
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
               className="h-full w-full object-cover grayscale-[15%]"
             >
               <source src="https://samaywatch-assets.sgp1.cdn.digitaloceanspaces.com/c567f4f3e7ae49e19c2af691c95517a1_vydgvs.mp4" type="video/mp4" />
@@ -814,9 +835,9 @@ export default function ProductDetail() {
           <div className="border-t border-neutral-200">
             {/* Description Tab */}
             <div className="border-b border-neutral-200">
-              <button 
-                type="button" 
-                onClick={() => toggleAccordion('description')} 
+              <button
+                type="button"
+                onClick={() => toggleAccordion('description')}
                 className="flex w-full items-center justify-between py-4 sm:py-6 text-left"
               >
                 <span className="font-poppins text-[16px] sm:text-[20px] font-bold text-black uppercase tracking-wide">Product Description</span>
@@ -835,9 +856,9 @@ export default function ProductDetail() {
 
             {/* Design Details Tab */}
             <div className="border-b border-neutral-200">
-              <button 
-                type="button" 
-                onClick={() => toggleAccordion('design')} 
+              <button
+                type="button"
+                onClick={() => toggleAccordion('design')}
                 className="flex w-full items-center justify-between py-4 sm:py-6 text-left"
               >
                 <span className="font-poppins text-[16px] sm:text-[20px] font-bold text-black uppercase tracking-wide">Design Details</span>
@@ -867,9 +888,9 @@ export default function ProductDetail() {
 
             {/* Warranty Info Tab */}
             <div className="border-b border-neutral-200">
-              <button 
-                type="button" 
-                onClick={() => toggleAccordion('warranty')} 
+              <button
+                type="button"
+                onClick={() => toggleAccordion('warranty')}
                 className="flex w-full items-center justify-between py-4 sm:py-6 text-left"
               >
                 <span className="font-poppins text-[16px] sm:text-[20px] font-bold text-black uppercase tracking-wide">Warranty & Services</span>
@@ -914,53 +935,53 @@ export default function ProductDetail() {
           </div>
           <div className="flex gap-6 overflow-x-auto snap-x snap-mandatory px-6 lg:px-12 pb-12 scrollbar-hide">
             {product.images?.filter(Boolean).map((img, idx) => (
-               <div key={idx} className="snap-center shrink-0 w-[85vw] md:w-[60vw] lg:w-[40vw] h-[400px] md:h-[500px] bg-[#fbfbfb] rounded-xl overflow-hidden shadow-sm">
-                 <img src={getSquareImage(img)} alt={`Gallery ${idx}`} className="h-full w-full object-contain mix-blend-multiply transition-transform duration-700 hover:scale-105" loading="lazy" />
-               </div>
+              <div key={idx} className="snap-center shrink-0 w-[85vw] md:w-[60vw] lg:w-[40vw] h-[400px] md:h-[500px] bg-[#fbfbfb] rounded-xl overflow-hidden shadow-sm">
+                <img src={getSquareImage(img)} alt={`Gallery ${idx}`} className="h-full w-full object-contain mix-blend-multiply transition-transform duration-700 hover:scale-105" loading="lazy" />
+              </div>
             ))}
             {/* Pad the slider for demo layout if images are limited */}
             {(product.images?.length || 0) < 3 && [...Array(3)].map((_, idx) => (
-               <div key={`extra-${idx}`} className="snap-center shrink-0 w-[85vw] md:w-[60vw] lg:w-[40vw] h-[400px] md:h-[500px] bg-[#fbfbfb] rounded-xl overflow-hidden shadow-sm">
-                 <img src={getSquareImage(product.images?.[0] || product.image?.url)} alt={`Gallery Extra ${idx}`} className="h-full w-full object-contain mix-blend-multiply transition-transform duration-700 hover:scale-105" loading="lazy" />
-               </div>
+              <div key={`extra-${idx}`} className="snap-center shrink-0 w-[85vw] md:w-[60vw] lg:w-[40vw] h-[400px] md:h-[500px] bg-[#fbfbfb] rounded-xl overflow-hidden shadow-sm">
+                <img src={getSquareImage(product.images?.[0] || product.image?.url)} alt={`Gallery Extra ${idx}`} className="h-full w-full object-contain mix-blend-multiply transition-transform duration-700 hover:scale-105" loading="lazy" />
+              </div>
             ))}
           </div>
         </section>
 
         {/* Customer Reviews — same data */}
         <section className="mt-16 sm:mt-24 lg:mt-32 max-w-5xl mx-auto px-4 sm:px-6">
-           <div className="flex flex-col md:flex-row gap-12 justify-between items-start md:items-center mb-16 border-b border-neutral-100 pb-8">
-              <div>
-                <h2 className="font-poppins text-[32px] font-bold text-black uppercase tracking-tight">Client Reviews</h2>
-                <div className="mt-4 flex items-center gap-3">
-                  <div className="flex text-gold text-lg">★★★★★</div>
-                  <span className="text-[13px] font-bold text-black">4.9 / 5</span>
-                  <span className="text-[12px] text-neutral-400 uppercase tracking-widest ml-2">Based on 124 Reviews</span>
-                </div>
+          <div className="flex flex-col md:flex-row gap-12 justify-between items-start md:items-center mb-16 border-b border-neutral-100 pb-8">
+            <div>
+              <h2 className="font-poppins text-[32px] font-bold text-black uppercase tracking-tight">Client Reviews</h2>
+              <div className="mt-4 flex items-center gap-3">
+                <div className="flex text-gold text-lg">★★★★★</div>
+                <span className="text-[13px] font-bold text-black">4.9 / 5</span>
+                <span className="text-[12px] text-neutral-400 uppercase tracking-widest ml-2">Based on 124 Reviews</span>
               </div>
-              <button className="border-b-2 border-black pb-1 text-[11px] font-bold text-black uppercase tracking-[0.2em] transition-all hover:text-gold hover:border-gold">Write a Review</button>
-           </div>
+            </div>
+            <button className="border-b-2 border-black pb-1 text-[11px] font-bold text-black uppercase tracking-[0.2em] transition-all hover:text-gold hover:border-gold">Write a Review</button>
+          </div>
 
-           <div className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-8 scrollbar-hide">
-              <div className="shrink-0 w-[85vw] md:w-[350px] snap-center bg-[#fbfbfb] p-8 rounded-2xl border border-neutral-100">
-                 <div className="flex text-gold text-sm mb-4">★★★★★</div>
-                 <h4 className="font-bold text-black text-[15px]">Absolutely Stunning</h4>
-                 <p className="text-[14px] text-neutral-500 font-medium leading-relaxed italic mt-2">"The weight, the finish, the intricate detailing on the dial—everything about this watch screams luxury. I've received countless compliments since purchasing."</p>
-                 <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mt-4">— Rajesh K.</p>
-              </div>
-              <div className="shrink-0 w-[85vw] md:w-[350px] snap-center bg-[#fbfbfb] p-8 rounded-2xl border border-neutral-100">
-                 <div className="flex text-gold text-sm mb-4">★★★★★</div>
-                 <h4 className="font-bold text-black text-[15px]">Exceptional Service</h4>
-                 <p className="text-[14px] text-neutral-500 font-medium leading-relaxed italic mt-2">"Not only is the watch impeccable, but the buying experience was flawless. Next day delivery and beautifully packaged. A true premium experience."</p>
-                 <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mt-4">— Amit D.</p>
-              </div>
-              <div className="shrink-0 w-[85vw] md:w-[350px] snap-center bg-[#fbfbfb] p-8 rounded-2xl border border-neutral-100">
-                 <div className="flex text-gold text-sm mb-4">★★★★★</div>
-                 <h4 className="font-bold text-black text-[15px]">Elegant and Timeless</h4>
-                 <p className="text-[14px] text-neutral-500 font-medium leading-relaxed italic mt-2">"Beautiful dial color that shifts in the sunlight. It seamlessly goes from formal business wear to weekend casual. Cannot recommend enough."</p>
-                 <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mt-4">— Sarah L.</p>
-              </div>
-           </div>
+          <div className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-8 scrollbar-hide">
+            <div className="shrink-0 w-[85vw] md:w-[350px] snap-center bg-[#fbfbfb] p-8 rounded-2xl border border-neutral-100">
+              <div className="flex text-gold text-sm mb-4">★★★★★</div>
+              <h4 className="font-bold text-black text-[15px]">Absolutely Stunning</h4>
+              <p className="text-[14px] text-neutral-500 font-medium leading-relaxed italic mt-2">"The weight, the finish, the intricate detailing on the dial—everything about this watch screams luxury. I've received countless compliments since purchasing."</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mt-4">— Rajesh K.</p>
+            </div>
+            <div className="shrink-0 w-[85vw] md:w-[350px] snap-center bg-[#fbfbfb] p-8 rounded-2xl border border-neutral-100">
+              <div className="flex text-gold text-sm mb-4">★★★★★</div>
+              <h4 className="font-bold text-black text-[15px]">Exceptional Service</h4>
+              <p className="text-[14px] text-neutral-500 font-medium leading-relaxed italic mt-2">"Not only is the watch impeccable, but the buying experience was flawless. Next day delivery and beautifully packaged. A true premium experience."</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mt-4">— Amit D.</p>
+            </div>
+            <div className="shrink-0 w-[85vw] md:w-[350px] snap-center bg-[#fbfbfb] p-8 rounded-2xl border border-neutral-100">
+              <div className="flex text-gold text-sm mb-4">★★★★★</div>
+              <h4 className="font-bold text-black text-[15px]">Elegant and Timeless</h4>
+              <p className="text-[14px] text-neutral-500 font-medium leading-relaxed italic mt-2">"Beautiful dial color that shifts in the sunlight. It seamlessly goes from formal business wear to weekend casual. Cannot recommend enough."</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-neutral-400 mt-4">— Sarah L.</p>
+            </div>
+          </div>
         </section>
 
         {/* FAQ Accordion — same data */}
@@ -976,9 +997,9 @@ export default function ProductDetail() {
               { q: "Is Cash on Delivery (COD) available?", a: "Currently, we do not offer Cash on Delivery (COD). To ensure the highest level of security and insurance for our premium timepieces, we only accept secure prepaid transactions." }
             ].map((faq, idx) => (
               <div key={idx} className="bg-white rounded-xl shadow-sm overflow-hidden border border-neutral-100 transition-all hover:border-gold/50">
-                <button 
-                  type="button" 
-                  onClick={() => toggleFaq(idx)} 
+                <button
+                  type="button"
+                  onClick={() => toggleFaq(idx)}
                   className="w-full flex justify-between items-center p-6 text-left"
                 >
                   <span className="font-bold text-[15px] text-black">{faq.q}</span>
@@ -1002,7 +1023,7 @@ export default function ProductDetail() {
 
         <section className="mt-16 sm:mt-24 lg:mt-32 px-4 sm:px-6">
           <h2 className="font-poppins text-[24px] sm:text-[30px] font-bold text-black uppercase tracking-tight mb-8">You May Also Like</h2>
-          
+
           <Swiper
             modules={[Autoplay, Pagination]}
             spaceBetween={16}
@@ -1027,25 +1048,25 @@ export default function ProductDetail() {
         {/* Discovery / Find Out More Section */}
         <section className="mt-20 sm:mt-28 mb-16 border-t border-neutral-100 pt-16 px-4">
           <div className="max-w-4xl mx-auto text-center">
-             <h3 className="font-serif text-[12px] font-black uppercase tracking-[0.4em] text-neutral-400 mb-8 sm:mb-10">Find Out More</h3>
-             <div className="flex flex-wrap justify-center gap-x-6 sm:gap-x-10 gap-y-4 sm:gap-y-6">
-                {[
-                  { label: "New Arrivals", href: "/all-products?sortBy=newest&type=new" },
-                  { label: "Men's Watches", href: "/all-products?gender=Male" },
-                  { label: "Women's Watches", href: "/all-products?gender=Female" },
-                  { label: "Luxury Brands", href: "/all-products?brandCategory=luxury" },
-                  { label: "Fashion Brands", href: "/all-products?brandCategory=fashion" },
-                ].map((link, i) => (
-                  <Link 
-                    key={i} 
-                    to={link.href} 
-                    className="group relative text-[13px] sm:text-[14px] font-black uppercase tracking-widest text-neutral-800 transition-colors hover:text-gold"
-                  >
-                    {link.label}
-                    <span className="absolute -bottom-1 left-0 h-px w-0 bg-gold transition-all duration-300 group-hover:w-full"></span>
-                  </Link>
-                ))}
-             </div>
+            <h3 className="font-serif text-[12px] font-black uppercase tracking-[0.4em] text-neutral-400 mb-8 sm:mb-10">Find Out More</h3>
+            <div className="flex flex-wrap justify-center gap-x-6 sm:gap-x-10 gap-y-4 sm:gap-y-6">
+              {[
+                { label: "New Arrivals", href: "/all-products?sortBy=newest&type=new" },
+                { label: "Men's Watches", href: "/all-products?gender=Male" },
+                { label: "Women's Watches", href: "/all-products?gender=Female" },
+                { label: "Luxury Brands", href: "/all-products?brandCategory=luxury" },
+                { label: "Fashion Brands", href: "/all-products?brandCategory=fashion" },
+              ].map((link, i) => (
+                <Link
+                  key={i}
+                  to={link.href}
+                  className="group relative text-[13px] sm:text-[14px] font-black uppercase tracking-widest text-neutral-800 transition-colors hover:text-gold"
+                >
+                  {link.label}
+                  <span className="absolute -bottom-1 left-0 h-px w-0 bg-gold transition-all duration-300 group-hover:w-full"></span>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
       </div>
@@ -1135,49 +1156,49 @@ export default function ProductDetail() {
             className="fixed bottom-0 left-0 right-0 z-[100] hidden lg:flex items-center justify-between bg-white/95 px-12 py-3 shadow-[0_-4px_30px_rgba(0,0,0,0.05)] backdrop-blur-md border-t border-neutral-100/50"
           >
             <div className="flex items-center gap-6">
-               <div className="h-14 w-14 shrink-0 rounded bg-[#fbfbfb] overflow-hidden p-1">
-                 <img 
-                   src={getSquareImage(product.images?.[0] || product.image?.url)} 
-                   alt={product.title} 
-                   className="h-full w-full object-contain mix-blend-multiply" 
-                   onError={(e) => {
-                     const currentSrc = e.currentTarget.src;
-                     const rawImage = product.images?.[0] || product.image?.url;
-                     const imageUrl = typeof rawImage === 'string' ? rawImage : rawImage?.url;
-                     if (currentSrc.includes('res.cloudinary.com') && imageUrl) {
-                       e.currentTarget.src = imageUrl;
-                     } else if (imageUrl && currentSrc === imageUrl) {
-                       const SAFE_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800' viewBox='0 0 800 800'%3E%3Crect width='800' height='800' fill='%23f3f4f6'/%3E%3Cpath d='M400 300a50 50 0 1 0 0 100 50 50 0 0 0 0-100zm-150 200h300l-75-100-75 100-50-60-100 60z' fill='%239ca3af'/%3E%3Ctext x='400' y='550' font-family='sans-serif' font-size='18' text-anchor='middle' fill='%239ca3af'%3EImage not available%3C/text%3E%3C/svg%3E";
-                       e.currentTarget.src = SAFE_PLACEHOLDER;
-                     }
-                   }}
-                 />
-               </div>
-               <div className="flex flex-col">
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-bold mb-0.5">{product.brand}</span>
-                  <span className="text-sm font-bold text-black leading-tight">{product.title}</span>
-               </div>
+              <div className="h-14 w-14 shrink-0 rounded bg-[#fbfbfb] overflow-hidden p-1">
+                <img
+                  src={getSquareImage(product.images?.[0] || product.image?.url)}
+                  alt={product.title}
+                  className="h-full w-full object-contain mix-blend-multiply"
+                  onError={(e) => {
+                    const currentSrc = e.currentTarget.src;
+                    const rawImage = product.images?.[0] || product.image?.url;
+                    const imageUrl = typeof rawImage === 'string' ? rawImage : rawImage?.url;
+                    if (currentSrc.includes('res.cloudinary.com') && imageUrl) {
+                      e.currentTarget.src = imageUrl;
+                    } else if (imageUrl && currentSrc === imageUrl) {
+                      const SAFE_PLACEHOLDER = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='800' viewBox='0 0 800 800'%3E%3Crect width='800' height='800' fill='%23f3f4f6'/%3E%3Cpath d='M400 300a50 50 0 1 0 0 100 50 50 0 0 0 0-100zm-150 200h300l-75-100-75 100-50-60-100 60z' fill='%239ca3af'/%3E%3Ctext x='400' y='550' font-family='sans-serif' font-size='18' text-anchor='middle' fill='%239ca3af'%3EImage not available%3C/text%3E%3C/svg%3E";
+                      e.currentTarget.src = SAFE_PLACEHOLDER;
+                    }
+                  }}
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-bold mb-0.5">{product.brand}</span>
+                <span className="text-sm font-bold text-black leading-tight">{product.title}</span>
+              </div>
             </div>
             <div className="flex items-center gap-8">
-               <span className="font-poppins text-[20px] font-bold tracking-tight text-black">{formatPrice(product.price)}</span>
-               {isInquiryOnlyBrand ? (
-                 <button
-                   type="button"
-                   onClick={handleWhatsAppShare}
-                   className="cursor-pointer rounded bg-neutral-900 px-10 py-3 text-[11px] font-bold uppercase tracking-widest text-white transition-all hover:bg-black shadow-[0_8px_20px_rgba(0,0,0,0.15)] hover:translate-y-[-1px] active:translate-y-0 flex items-center gap-2"
-                 >
-                   <WhatsAppIcon className="size-4" />
-                   INQUIRE US
-                 </button>
-               ) : (
-                 <button
-                   type="button"
-                   onClick={addToCart}
-                   className="cursor-pointer rounded bg-black px-10 py-3 text-[11px] font-bold uppercase tracking-widest text-white transition-all hover:bg-black shadow-lg hover:translate-y-[-1px] active:translate-y-0"
-                 >
-                   ADD TO CART
-                 </button>
-               )}
+              <span className="font-poppins text-[20px] font-bold tracking-tight text-black">{formatPrice(product.price)}</span>
+              {isInquiryOnlyBrand ? (
+                <button
+                  type="button"
+                  onClick={handleWhatsAppShare}
+                  className="cursor-pointer rounded bg-neutral-900 px-10 py-3 text-[11px] font-bold uppercase tracking-widest text-white transition-all hover:bg-black shadow-[0_8px_20px_rgba(0,0,0,0.15)] hover:translate-y-[-1px] active:translate-y-0 flex items-center gap-2"
+                >
+                  <WhatsAppIcon className="size-4" />
+                  INQUIRE US
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={addToCart}
+                  className="cursor-pointer rounded bg-black px-10 py-3 text-[11px] font-bold uppercase tracking-widest text-white transition-all hover:bg-black shadow-lg hover:translate-y-[-1px] active:translate-y-0"
+                >
+                  ADD TO CART
+                </button>
+              )}
             </div>
           </motion.div>
         )}
@@ -1189,18 +1210,18 @@ export default function ProductDetail() {
           <motion.img
             src={flyingImage.src}
             initial={{ opacity: 1, x: flyingImage.x, y: flyingImage.y, scale: 1, position: 'fixed', zIndex: 999999 }}
-            animate={{ 
-              opacity: 0, 
+            animate={{
+              opacity: 0,
               x: window.innerWidth > 768 ? window.innerWidth - 100 : window.innerWidth / 2 - 40, // Top right on desktop, center down on mobile
-              y: window.innerWidth > 768 ? 100 : window.innerHeight - 100, 
-              scale: 0.1 
+              y: window.innerWidth > 768 ? 100 : window.innerHeight - 100,
+              scale: 0.1
             }}
-            transition={{ duration: 0.7, ease: [0.25, 1, 0.5, 1] }} 
+            transition={{ duration: 0.7, ease: [0.25, 1, 0.5, 1] }}
             className="w-20 h-20 object-contain rounded-full shadow-2xl border border-neutral-200 bg-white pointer-events-none"
           />
         )}
       </AnimatePresence>
- 
+
     </div>
   )
 }

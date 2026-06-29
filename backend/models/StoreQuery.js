@@ -36,6 +36,19 @@ const storeQuerySchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    response: {
+      type: String,
+      default: "",
+    },
+    type: {
+      type: String,
+      enum: ["query", "ticket"],
+      default: "query",
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   {
     timestamps: true,

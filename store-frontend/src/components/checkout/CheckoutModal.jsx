@@ -17,6 +17,7 @@ const STATES = [
 ]
 
 const STORAGE_KEY = 'ims_checkout_address'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
 function loadSavedAddress() {
   try {
@@ -105,6 +106,7 @@ export default function CheckoutModal({
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [isPincodeLoading, setIsPincodeLoading] = useState(false)
+  const [pincodeServiceable, setPincodeServiceable] = useState(true)
   const [savedAddresses, setSavedAddresses] = useState([])
   const [loadingAddresses, setLoadingAddresses] = useState(false)
   const [selectedAddressId, setSelectedAddressId] = useState(null)
@@ -201,12 +203,15 @@ export default function CheckoutModal({
     setIsApplyingCheckoutCoupon(false)
   }
 
-  // Auto-fill City & State from Pincode
+  // Auto-fill City & State from Pincode and check Shiprocket serviceability
   useEffect(() => {
     const pin = form.pincode ? String(form.pincode).trim() : ''
     if (pin.length === 6 && /^\d{6}$/.test(pin)) {
-      const fetchLocation = async () => {
+      const fetchLocationAndServiceability = async () => {
         setIsPincodeLoading(true)
+        setPincodeServiceable(true) // reset
+        
+        // 1. Fetch location details
         try {
           const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`)
           const data = await res.json()
@@ -226,17 +231,43 @@ export default function CheckoutModal({
             }))
             
             // Clear errors for auto-filled fields
-            if (fetchedCity) setErrors(prev => ({ ...prev, city: '' }))
-            if (matchedState) setErrors(prev => ({ ...prev, state: '' }))
+            setErrors(prev => {
+              const next = { ...prev }
+              if (fetchedCity) delete next.city
+              if (matchedState) delete next.state
+              return next
+            })
           }
         } catch (err) {
           // Fail silently/gracefully on external API certificate or network issues; user can enter manually.
           console.warn('Auto-pincode resolution skipped due to external API certificate validation error.')
+        }
+
+        // 2. Fetch Shiprocket serviceability
+        try {
+          const serviceabilityRes = await fetch(`${API_BASE}/api/store/shiprocket/serviceability?pincode=${pin}`)
+          const serviceabilityData = await serviceabilityRes.json()
+          if (serviceabilityData.success && serviceabilityData.serviceable === false) {
+            setPincodeServiceable(false)
+            setErrors(prev => ({ ...prev, pincode: 'This pincode is not serviceable by our courier partner.' }))
+          } else {
+            setPincodeServiceable(true)
+            setErrors(prev => {
+              const next = { ...prev }
+              delete next.pincode
+              return next
+            })
+          }
+        } catch (err) {
+          console.warn('Shiprocket serviceability check failed, defaulting to serviceable:', err)
+          setPincodeServiceable(true)
         } finally {
           setIsPincodeLoading(false)
         }
       }
-      fetchLocation()
+      fetchLocationAndServiceability()
+    } else {
+      setPincodeServiceable(true)
     }
   }, [form.pincode])
 
@@ -252,12 +283,53 @@ export default function CheckoutModal({
 
   function validate() {
     const e = {}
-    if (!form.fullName.trim()) e.fullName = 'Full name is required'
-    if (!form.phone.trim() || !/^\d{10}$/.test(form.phone.trim())) e.phone = 'Enter a valid 10-digit phone number'
-    if (!form.addressLine1.trim()) e.addressLine1 = 'Address is required'
+    
+    // 1. Full Name Validation
+    if (!form.fullName.trim()) {
+      e.fullName = 'Full name is required'
+    } else if (form.fullName.trim().split(/\s+/).length < 2) {
+      e.fullName = 'Please enter both first name and last name'
+    }
+
+    // 2. Mobile Phone Validation (Indian numbers start with 6-9, strictly 10 digits, exclude repetitive fake numbers)
+    const phone = form.phone.trim()
+    if (!phone) {
+      e.phone = 'Phone number is required'
+    } else if (!/^[6-9]\d{9}$/.test(phone)) {
+      e.phone = 'Enter a valid 10-digit Indian mobile number'
+    } else if (/^(\d)\1{9}$/.test(phone) || phone === '1234567890') {
+      e.phone = 'Please enter a genuine mobile number'
+    }
+
+    // 3. Address Line 1 & Line 2 Validation (Enforce house/flat number, road/locality, and min length)
+    const addr1 = form.addressLine1.trim()
+    const addr2 = (form.addressLine2 || '').trim()
+    const totalAddr = `${addr1} ${addr2}`.trim()
+
+    if (!addr1) {
+      e.addressLine1 = 'Address Line 1 is required'
+    } else if (addr1.length < 10) {
+      e.addressLine1 = 'Please enter more details (e.g. flat number, building/street name)'
+    }
+
+    if (totalAddr.length < 20) {
+      e.addressLine1 = 'Full address must be at least 20 characters to avoid delivery failures (add landmark/locality)'
+    } else if (!/\d/.test(totalAddr)) {
+      e.addressLine1 = 'Please include a house number, flat number, or plot number'
+    } else if (totalAddr.split(/\s+/).length < 4) {
+      e.addressLine1 = 'Please provide detailed address including colony, street, or landmark'
+    }
+
     if (!form.city.trim()) e.city = 'City is required'
     if (!form.state) e.state = 'State is required'
-    if (!form.pincode.trim() || !/^\d{6}$/.test(form.pincode.trim())) e.pincode = 'Enter a valid 6-digit pincode'
+    
+    // 4. Pincode & Serviceability check
+    if (!form.pincode.trim() || !/^\d{6}$/.test(form.pincode.trim())) {
+      e.pincode = 'Enter a valid 6-digit pincode'
+    } else if (!pincodeServiceable) {
+      e.pincode = 'This pincode is not serviceable by our courier partner.'
+    }
+    
     return e
   }
 

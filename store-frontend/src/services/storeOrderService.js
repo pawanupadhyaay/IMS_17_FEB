@@ -20,6 +20,10 @@ const storeOrderService = {
     const response = await api.get('/my-orders');
     return response.data;
   },
+  getOrderTracking: async (id) => {
+    const response = await api.get(`/my-orders/${id}/track`);
+    return response.data;
+  },
 };
 
 export default storeOrderService;

@@ -409,9 +409,9 @@ const MobileProductModal = ({ product, mode, onClose, onSave, brands = [], isOwn
                     name="sku"
                     value={formData.sku}
                     onChange={handleChange}
-                    disabled={isViewMode || !isOwner}
-                    readOnly={isViewMode || !isOwner}
-                    className={`mobile-form-input ${isViewMode || !isOwner ? 'mobile-form-input-readonly' : ''}`}
+                    disabled={isViewMode || (!isOwner && mode !== 'create')}
+                    readOnly={isViewMode || (!isOwner && mode !== 'create')}
+                    className={`mobile-form-input ${isViewMode || (!isOwner && mode !== 'create') ? 'mobile-form-input-readonly' : ''}`}
                   />
                 </div>
                 <div className="mobile-form-group">

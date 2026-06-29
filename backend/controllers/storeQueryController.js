@@ -5,7 +5,7 @@ const StoreQuery = require("../models/StoreQuery");
 // @access  Public
 exports.createStoreQuery = async (req, res) => {
   try {
-    const { firstName, lastName, email, mobile, message } = req.body;
+    const { firstName, lastName, email, mobile, message, type, userId } = req.body;
 
     if (!firstName || !email || !mobile || !message) {
       return res.status(400).json({
@@ -20,7 +20,17 @@ exports.createStoreQuery = async (req, res) => {
       email,
       mobile,
       message,
+      type: type || "query",
+      user: userId || null
     });
+
+    // Send ticket raised email to the user
+    try {
+      const emailService = require("../utils/emailService");
+      await emailService.sendTicketRaisedNotification(query);
+    } catch (mailErr) {
+      console.error("Failed to send ticket raised email:", mailErr.message);
+    }
 
     res.status(201).json({
       success: true,
@@ -40,7 +50,12 @@ exports.createStoreQuery = async (req, res) => {
 // @access  Private (Owner/Admin)
 exports.getStoreQueries = async (req, res) => {
   try {
-    const queries = await StoreQuery.find().sort({ createdAt: -1 });
+    const { type } = req.query;
+    const filter = {};
+    if (type) {
+      filter.type = type;
+    }
+    const queries = await StoreQuery.find(filter).sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
@@ -117,6 +132,7 @@ exports.deleteStoreQuery = async (req, res) => {
 exports.getMyQueries = async (req, res) => {
   try {
     const queries = await StoreQuery.find({
+      type: "ticket",
       $or: [
         { email: req.user.email },
         { mobile: req.user.mobile }
@@ -127,6 +143,47 @@ exports.getMyQueries = async (req, res) => {
       success: true,
       count: queries.length,
       data: queries
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Server Error"
+    });
+  }
+};
+
+// @desc    Reply to a support query and send email
+// @route   POST /api/store-admin/queries/:id/reply
+// @access  Private (Owner/Admin)
+exports.replyToQuery = async (req, res) => {
+  try {
+    const { replyMessage } = req.body;
+    if (!replyMessage || !replyMessage.trim()) {
+      return res.status(400).json({ success: false, message: "Reply message cannot be empty" });
+    }
+
+    const query = await StoreQuery.findById(req.params.id);
+    if (!query) {
+      return res.status(404).json({ success: false, message: "Query not found" });
+    }
+
+    query.response = replyMessage;
+    query.status = "responded";
+    query.isRead = true;
+    await query.save();
+
+    // Send email notification to user with the staff's reply
+    try {
+      const emailService = require("../utils/emailService");
+      await emailService.sendTicketUpdateNotification(query, replyMessage);
+    } catch (mailErr) {
+      console.error("Failed to send ticket update email:", mailErr.message);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Reply sent and query updated successfully",
+      data: query
     });
   } catch (error) {
     res.status(500).json({

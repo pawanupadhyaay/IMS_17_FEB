@@ -386,9 +386,9 @@ const ProductModal = ({ product, mode, onClose, onSave, brands = [], isOwner, dy
                   name="sku"
                   value={formData.sku}
                   onChange={handleChange}
-                  disabled={isViewMode || !isOwner}
-                  readOnly={isViewMode || !isOwner}
-                  className={isViewMode || !isOwner ? 'form-input-readonly' : ''}
+                  disabled={isViewMode || (!isOwner && mode !== 'create')}
+                  readOnly={isViewMode || (!isOwner && mode !== 'create')}
+                  className={isViewMode || (!isOwner && mode !== 'create') ? 'form-input-readonly' : ''}
                 />
               </div>
               <div className="form-group">

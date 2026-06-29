@@ -23,13 +23,15 @@ const {
   getNotificationCounts,
   markReviewsAsRead,
   markOrdersAsRead,
-  markQueriesAsRead
+  markQueriesAsRead,
+  updateOrderShipment
 } = require('../controllers/storeAdminController');
 
 const {
   getStoreQueries,
   updateQueryStatus,
-  deleteStoreQuery
+  deleteStoreQuery,
+  replyToQuery
 } = require('../controllers/storeQueryController');
 
 // All routes are strictly protected and restricted to 'Owner'
@@ -47,12 +49,14 @@ router.route('/queries/mark-read').post(markQueriesAsRead);
 
 // Orders
 router.route('/orders').get(getOrders);
+router.route('/orders/:id').put(updateOrderShipment);
 
 // Inquiries (Queries)
 router.route('/queries').get(getStoreQueries);
 router.route('/queries/:id')
   .put(updateQueryStatus)
   .delete(deleteStoreQuery);
+router.route('/queries/:id/reply').post(replyToQuery);
 
 // Coupons
 router.route('/coupons')

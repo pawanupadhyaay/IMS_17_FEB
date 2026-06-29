@@ -17,8 +17,8 @@ const storeAdminService = {
     const response = await api.post('/store-admin/orders/mark-read');
     return response.data;
   },
-  markQueriesAsRead: async () => {
-    const response = await api.post('/store-admin/queries/mark-read');
+  markQueriesAsRead: async (type) => {
+    const response = await api.post('/store-admin/queries/mark-read', { type });
     return response.data;
   },
   getOrders: async () => {
@@ -73,8 +73,8 @@ const storeAdminService = {
     const response = await api.get('/store-admin/customers');
     return response.data;
   },
-  getQueries: async () => {
-    const response = await api.get('/store-admin/queries');
+  getQueries: async (type) => {
+    const response = await api.get('/store-admin/queries', { params: { type } });
     return response.data;
   },
   updateQueryStatus: async (id, status) => {
@@ -99,6 +99,14 @@ const storeAdminService = {
   },
   deleteStaff: async (id) => {
     const response = await api.delete(`/store-admin/staffs/${id}`);
+    return response.data;
+  },
+  updateOrderShipment: async (id, shipmentData) => {
+    const response = await api.put(`/store-admin/orders/${id}`, shipmentData);
+    return response.data;
+  },
+  replyToQuery: async (id, replyMessage) => {
+    const response = await api.post(`/store-admin/queries/${id}/reply`, { replyMessage });
     return response.data;
   }
 };

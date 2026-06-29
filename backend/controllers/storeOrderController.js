@@ -9,6 +9,7 @@ const User = require("../models/User");
 const { logActivity } = require("../utils/logActivity");
 const { updateDashboardStatsInBackground } = require("./productController");
 const nodemailer = require("nodemailer");
+const shiprocketService = require("../services/shiprocketService");
 
 // Reusable server-side high-fidelity HTML Invoice Generator for email attachments
 function buildInvoiceHtml(order) {
@@ -502,7 +503,24 @@ exports.verifyPayment = async (req, res) => {
           paymentVpa: paymentVpa || '',
         },
         { new: true }
-      ).populate('items.product', 'brand images');
+      ).populate('items.product', 'brand images sku');
+
+      // Register order on Shiprocket on successful payment verification (dynamic/mock fallback supported)
+      if (updatedOrder) {
+        try {
+          const shiprocketResult = await shiprocketService.createShiprocketOrder(updatedOrder);
+          if (shiprocketResult && shiprocketResult.success) {
+            updatedOrder.shiprocketOrderId = shiprocketResult.shiprocketOrderId;
+            updatedOrder.awbCode = shiprocketResult.awbCode;
+            updatedOrder.courierName = shiprocketResult.courierName;
+            updatedOrder.shipmentStatus = "created";
+            await updatedOrder.save();
+            console.log(`✅ Shiprocket Order registered successfully for ${updatedOrder.orderNumber}`);
+          }
+        } catch (srError) {
+          console.error("❌ Shiprocket Registration Error:", srError.message);
+        }
+      }
 
       // Reduce Inventory for each item (Dynamic IMS Sync)
       if (updatedOrder && updatedOrder.items) {
@@ -817,6 +835,253 @@ exports.getPaymentDetails = async (req, res) => {
   } catch (error) {
     console.error('GetPaymentDetails Error:', error);
     res.status(500).json({ success: false, message: 'Could not fetch payment details' });
+  }
+};
+
+// @desc    Get Shiprocket live tracking status for an order
+// @route   GET /api/store/my-orders/:id/track
+// @access  Private (Store)
+exports.getOrderTracking = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    // Verify ownership
+    if (order.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: "Unauthorized access to order tracking" });
+    }
+
+    // Sync status with Shiprocket in real-time if not delivered/cancelled AND not manually overridden
+    if (order.shiprocketOrderId && !order.trackingUrl && !["delivered", "cancelled"].includes(order.orderStatus)) {
+      try {
+        const syncResult = await shiprocketService.syncOrderDetails(order.shiprocketOrderId);
+        if (syncResult && syncResult.success) {
+          let updated = false;
+          if (syncResult.awbCode && order.awbCode !== syncResult.awbCode) {
+            order.awbCode = syncResult.awbCode;
+            updated = true;
+          }
+          if (syncResult.courierName && order.courierName !== syncResult.courierName) {
+            order.courierName = syncResult.courierName;
+            updated = true;
+          }
+          if (syncResult.shipmentStatus && order.shipmentStatus !== syncResult.shipmentStatus) {
+            order.shipmentStatus = syncResult.shipmentStatus;
+            updated = true;
+          }
+          if (syncResult.orderStatus && order.orderStatus !== syncResult.orderStatus) {
+            order.orderStatus = syncResult.orderStatus;
+            updated = true;
+          }
+          if (updated) {
+            await order.save();
+            // If the status transitioned to shipped or delivered, send transit update email
+            if (syncResult.orderStatus && ["shipped", "delivered"].includes(syncResult.orderStatus)) {
+              try {
+                const emailService = require('../utils/emailService');
+                await emailService.sendTransitUpdate(order);
+              } catch (mailErr) {
+                console.error("Failed to send transit update email during live sync:", mailErr.message);
+              }
+            }
+          }
+        }
+      } catch (syncErr) {
+        console.error("Error auto-syncing Shiprocket order status:", syncErr.message);
+      }
+    }
+
+    if (order.orderStatus === "cancelled") {
+      return res.status(200).json({
+        success: true,
+        status: "Cancelled",
+        message: "This order has been cancelled.",
+        trackingSteps: [
+          {
+            activity: "Order Placed & Confirmed",
+            location: "Warehouse",
+            date: order.createdAt,
+            status: "completed"
+          },
+          {
+            activity: "Order Cancelled",
+            location: "Samay Watch Logistics Hub",
+            date: order.updatedAt,
+            status: "cancelled"
+          }
+        ]
+      });
+    }
+
+    // If it's a manual order (no shiprocketOrderId) or has a custom tracking URL, return dynamic manual tracking steps
+    if (!order.shiprocketOrderId || order.trackingUrl) {
+      const steps = [
+        {
+          activity: "Order Placed & Confirmed",
+          location: "Warehouse",
+          date: order.paidAt || order.createdAt,
+          status: "completed"
+        }
+      ];
+
+      if (["processing", "shipped", "out_for_delivery", "delivered"].includes(order.orderStatus)) {
+        steps.push({
+          activity: "Order Processed",
+          location: "Samay Watch Logistics Hub",
+          date: order.updatedAt,
+          status: order.orderStatus === "processing" ? "in-transit" : "completed"
+        });
+      }
+
+      if (["shipped", "out_for_delivery", "delivered"].includes(order.orderStatus)) {
+        steps.push({
+          activity: `Dispatched via ${order.courierName || 'Partner'}`,
+          location: "Samay Watch Logistics Hub",
+          date: order.updatedAt,
+          status: order.orderStatus === "shipped" ? "in-transit" : "completed"
+        });
+      }
+
+      if (["out_for_delivery", "delivered"].includes(order.orderStatus)) {
+        steps.push({
+          activity: "Out for Delivery",
+          location: "Local Hub Outlet",
+          date: order.updatedAt,
+          status: order.orderStatus === "out_for_delivery" ? "in-transit" : "completed"
+        });
+      }
+
+      if (order.orderStatus === "delivered") {
+        steps.push({
+          activity: "Delivered",
+          location: "Destination Address",
+          date: order.updatedAt,
+          status: "completed"
+        });
+      }
+
+      // If they haven't set the status to processing/shipped/delivered yet (e.g. still pending/confirmed), show a pending step
+      if (steps.length === 1) {
+        steps.push({
+          activity: "Courier Manifest Awaiting Assigning",
+          location: "Samay Watch Logistics Hub",
+          date: null,
+          status: "pending"
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        status: order.orderStatus === "processing" ? "Processing" : order.orderStatus === "shipped" ? "In Transit" : order.orderStatus === "out_for_delivery" ? "Out for Delivery" : order.orderStatus === "delivered" ? "Delivered" : "Confirmed",
+        awbCode: order.awbCode,
+        courierName: order.courierName,
+        trackingSteps: steps
+      });
+    }
+
+    // If it's an automated Shiprocket order, call the Shiprocket tracking API
+    const trackingData = await shiprocketService.trackShipment(order.awbCode);
+    res.status(200).json({ success: true, ...trackingData });
+  } catch (error) {
+    console.error("GetOrderTracking Error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch live tracking details" });
+  }
+};
+
+// @desc    Check Pincode Serviceability with Shiprocket
+// @route   GET /api/store/shiprocket/serviceability
+// @access  Public (Store)
+exports.checkServiceability = async (req, res) => {
+  try {
+    const { pincode } = req.query;
+    if (!pincode || pincode.length !== 6 || !/^\d{6}$/.test(pincode)) {
+      return res.status(400).json({ success: false, message: "Please provide a valid 6-digit pincode" });
+    }
+
+    const result = await shiprocketService.checkPincodeServiceability(pincode);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error("CheckServiceability Error:", error);
+    res.status(500).json({ success: false, message: "Failed to check serviceability" });
+  }
+};
+
+// @desc    Shiprocket webhook callback receiver for order status updates
+// @route   POST /api/store/shiprocket/webhook
+// @access  Public
+exports.handleShiprocketWebhook = async (req, res) => {
+  try {
+    const payload = req.body;
+    console.log("📥 Received Shiprocket Webhook:", JSON.stringify(payload));
+
+    const shiprocketOrderId = payload.order_id;
+    const awbCode = payload.awb;
+    const currentStatus = payload.current_status ? payload.current_status.toLowerCase() : "";
+
+    if (!shiprocketOrderId && !awbCode) {
+      return res.status(400).json({ success: false, message: "Invalid webhook payload" });
+    }
+
+    // Find order
+    const query = {};
+    if (shiprocketOrderId) query.shiprocketOrderId = String(shiprocketOrderId);
+    else query.awbCode = String(awbCode);
+
+    const order = await Order.findOne(query);
+    if (!order) {
+      console.warn(`⚠️ Webhook matched no orders for ID ${shiprocketOrderId} or AWB ${awbCode}`);
+      return res.status(200).json({ success: true, message: "No matching order found, ignoring" });
+    }
+
+    // If manually overridden with custom courier link, ignore Shiprocket webhooks
+    if (order.trackingUrl) {
+      console.log(`ℹ️ Webhook ignored for order #${order.orderNumber} because it is being tracked manually via a custom URL.`);
+      return res.status(200).json({ success: true, message: "Manual tracking override active, ignoring webhook" });
+    }
+
+    // Update status
+    if (awbCode && order.awbCode !== awbCode) {
+      order.awbCode = awbCode;
+    }
+    if (payload.courier_name && order.courierName !== payload.courier_name) {
+      order.courierName = payload.courier_name;
+    }
+    if (payload.current_status && order.shipmentStatus !== payload.current_status) {
+      order.shipmentStatus = payload.current_status;
+    }
+
+    // Map webhook status to local orderStatus
+    const oldStatus = order.orderStatus;
+    if (currentStatus.includes("delivered")) {
+      order.orderStatus = "delivered";
+    } else if (currentStatus.includes("shipped") || currentStatus.includes("transit") || currentStatus.includes("out")) {
+      order.orderStatus = "shipped";
+    } else if (currentStatus.includes("cancel")) {
+      order.orderStatus = "cancelled";
+    }
+
+    const statusChanged = oldStatus !== order.orderStatus;
+    await order.save();
+    console.log(`✅ Webhook updated order #${order.orderNumber} status to ${order.orderStatus}`);
+
+    // If status changed and is shipped or delivered, trigger transit update email
+    if (statusChanged && ["shipped", "delivered"].includes(order.orderStatus)) {
+      try {
+        const emailService = require('../utils/emailService');
+        await emailService.sendTransitUpdate(order);
+      } catch (mailErr) {
+        console.error("Failed to send transit update email during webhook:", mailErr.message);
+      }
+    }
+
+    res.status(200).json({ success: true, message: "Webhook processed successfully" });
+  } catch (error) {
+    console.error("handleShiprocketWebhook Error:", error);
+    res.status(500).json({ success: false, message: "Webhook process failed" });
   }
 };
 

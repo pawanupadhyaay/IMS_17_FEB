@@ -53,7 +53,8 @@ function App() {
                 <Route path="blogs" element={<StoreBlogs />} />
                 <Route path="reviews" element={<StoreReviews />} />
                 <Route path="customers" element={<StoreCustomers />} />
-                <Route path="queries" element={<StoreQueries />} />
+                <Route path="queries" element={<StoreQueries type="query" />} />
+                <Route path="tickets" element={<StoreQueries type="ticket" />} />
                 <Route path="staffs" element={<StoreStaffs />} />
                 <Route path="analytics" element={<StoreAnalytics />} />
               </Route>

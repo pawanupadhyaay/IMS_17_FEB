@@ -23,20 +23,23 @@ const Icons = {
   )
 };
 
-const StoreQueries = () => {
+const StoreQueries = ({ type = 'query' }) => {
   const [queries, setQueries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('New');
   const [expandedQueryId, setExpandedQueryId] = useState(null);
+  const [replyText, setReplyText] = useState('');
+  const [sendingReply, setSendingReply] = useState(false);
 
   const fetchQueries = async () => {
     try {
-      const res = await storeAdminService.getQueries();
+      setLoading(true);
+      const res = await storeAdminService.getQueries(type);
       if (res.success) setQueries(res.data);
     } catch (error) {
       console.error('Failed to fetch queries:', error);
-      toast.error('Failed to load inquiries');
+      toast.error(type === 'ticket' ? 'Failed to load support tickets' : 'Failed to load inquiries');
     } finally {
       setLoading(false);
     }
@@ -44,8 +47,8 @@ const StoreQueries = () => {
 
   useEffect(() => {
     fetchQueries();
-    storeAdminService.markQueriesAsRead().catch(err => console.error(err));
-  }, []);
+    storeAdminService.markQueriesAsRead(type).catch(err => console.error(err));
+  }, [type]);
 
   const handleStatusUpdate = async (id, status) => {
     try {
@@ -56,6 +59,27 @@ const StoreQueries = () => {
       }
     } catch (error) {
       toast.error('Update failed');
+    }
+  };
+
+  const handleSendReply = async (id) => {
+    if (!replyText.trim()) {
+      toast.error('Reply message cannot be empty');
+      return;
+    }
+    try {
+      setSendingReply(true);
+      const res = await storeAdminService.replyToQuery(id, replyText);
+      if (res.success) {
+        setQueries(queries.map(q => q._id === id ? { ...q, status: 'responded', response: replyText } : q));
+        setReplyText('');
+        toast.success('Reply sent and customer notified!');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to send reply');
+    } finally {
+      setSendingReply(false);
     }
   };
 
@@ -94,15 +118,21 @@ const StoreQueries = () => {
     responded: queries.filter(q => q.status === 'responded').length
   };
 
-  if (loading) return <div className="store-loading">Loading Inquiries...</div>;
+  if (loading) return <div className="store-loading">{type === 'ticket' ? 'Loading Tickets...' : 'Loading Inquiries...'}</div>;
+
+  const isTicket = type === 'ticket';
 
   return (
     <div className="store-dashboard">
       <div className="store-page-header">
         <div className="page-title-box">
           <p className="page-subtitle">OVERVIEW</p>
-          <h1>Customer Inquiries</h1>
-          <p className="page-desc">Track and manage queries sent via the Contact Us form.</p>
+          <h1>{isTicket ? 'Support Tickets' : 'Customer Inquiries'}</h1>
+          <p className="page-desc">
+            {isTicket 
+              ? 'Track and manage customer support tickets and send live email replies.' 
+              : 'Track and manage queries sent via the Contact Us form.'}
+          </p>
         </div>
         <div className="page-actions">
           <button className="btn-dark" onClick={fetchQueries}>Refresh List</button>
@@ -111,15 +141,15 @@ const StoreQueries = () => {
 
       <div className="store-metrics-grid">
         <div className="metric-card">
-          <p className="metric-label">TOTAL INQUIRIES</p>
+          <p className="metric-label">{isTicket ? 'TOTAL TICKETS' : 'TOTAL INQUIRIES'}</p>
           <h2>{stats.total}</h2>
         </div>
         <div className="metric-card">
-          <p className="metric-label">NEW INQUIRIES</p>
+          <p className="metric-label">{isTicket ? 'NEW TICKETS' : 'NEW INQUIRIES'}</p>
           <h2 style={{color: '#f5b041'}}>{stats.new}</h2>
         </div>
         <div className="metric-card">
-          <p className="metric-label">RESPONDED</p>
+          <p className="metric-label">{isTicket ? 'RESOLVED' : 'RESPONDED'}</p>
           <h2 style={{color: '#008060'}}>{stats.responded}</h2>
         </div>
       </div>
@@ -153,7 +183,7 @@ const StoreQueries = () => {
         </div>
 
         {filteredQueries.length === 0 ? (
-          <div className="store-empty">No inquiries matching your criteria.</div>
+          <div className="store-empty">No {isTicket ? 'tickets' : 'inquiries'} matching your criteria.</div>
         ) : (
           <table className="store-table">
             <thead>
@@ -172,8 +202,12 @@ const StoreQueries = () => {
                   <tr 
                     style={{ cursor: 'pointer' }}
                     onClick={() => {
-                      setExpandedQueryId(expandedQueryId === query._id ? null : query._id);
-                      if (query.status === 'new') handleStatusUpdate(query._id, 'read');
+                      const isExpanding = expandedQueryId !== query._id;
+                      setExpandedQueryId(isExpanding ? query._id : null);
+                      setReplyText('');
+                      if (isExpanding && query.status === 'new') {
+                        handleStatusUpdate(query._id, 'read');
+                      }
                     }}
                     onMouseEnter={() => query.status === 'new' && handleStatusUpdate(query._id, 'read')}
                   >
@@ -227,16 +261,49 @@ const StoreQueries = () => {
                   {expandedQueryId === query._id && (
                     <tr className="order-details-expanded">
                       <td colSpan="6" style={{ padding: 0 }}>
-                        <div className="query-expanded-container">
-                           <div className="query-expanded-message">
-                             <h4>Full Message</h4>
-                             <p>{query.message}</p>
+                        <div className="query-expanded-container" style={{ padding: '20px', background: '#fafafa', display: 'flex', gap: '25px', flexWrap: 'wrap' }}>
+                           <div className="query-expanded-message" style={{ flex: '2 1 300px' }}>
+                             <h4 style={{ margin: '0 0 10px 0', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', color: '#888', letterSpacing: '0.5px' }}>Full Message</h4>
+                             <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.6', background: 'white', padding: '15px', borderRadius: '8px', border: '1px solid #eee', color: '#222', whiteSpace: 'pre-wrap' }}>
+                               {query.message}
+                             </p>
+                             {query.response && (
+                               <div style={{ marginTop: '15px' }}>
+                                 <h4 style={{ margin: '0 0 10px 0', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', color: '#008060', letterSpacing: '0.5px' }}>Previous Reply Sent</h4>
+                                 <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.6', background: '#f4fdf9', padding: '15px', borderRadius: '8px', border: '1px solid #d1f2e5', color: '#111', fontWeight: '500', whiteSpace: 'pre-wrap' }}>
+                                   {query.response}
+                                 </p>
+                               </div>
+                             )}
                            </div>
-                           <div className="query-expanded-actions">
-                             <h4>Quick Actions</h4>
-                             <a href={`mailto:${query.email}?subject=Re: Your Inquiry`} className="btn-reply-email">
-                               <Icons.Mail size={14}/> Reply via Email
-                             </a>
+                           <div className="query-expanded-actions" style={{ flex: '1.5 1 250px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                             <h4 style={{ margin: '0 0 10px 0', fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', color: '#888', letterSpacing: '0.5px' }}>Concierge Reply (SMTP Email)</h4>
+                             <textarea
+                               className="reply-textarea"
+                               placeholder="Type your official reply here. The customer will receive this immediately via email..."
+                               value={replyText}
+                               onChange={(e) => setReplyText(e.target.value)}
+                               rows={5}
+                               style={{ width: '100%', padding: '10px', fontSize: '12.5px', border: '1px solid #ddd', borderRadius: '6px', outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                             />
+                             <div className="flex gap-2 mt-2" style={{ display: 'flex', gap: '8px' }}>
+                               <button 
+                                 className="btn-dark"
+                                 onClick={() => handleSendReply(query._id)}
+                                 disabled={sendingReply || !replyText.trim()}
+                                 style={{ padding: '8px 16px', fontSize: '11px', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.5px', cursor: 'pointer' }}
+                               >
+                                 {sendingReply ? 'Sending...' : 'Send Reply'}
+                               </button>
+                               <a 
+                                 href={`mailto:${query.email}?subject=Re: Your Inquiry`} 
+                                 className="btn-reply-email"
+                                 onClick={(e) => e.stopPropagation()}
+                                 style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontSize: '11px', textTransform: 'uppercase', fontWeight: 'bold', background: '#eee', color: '#333', border: '1px solid #ddd', borderRadius: '6px', textDecoration: 'none' }}
+                               >
+                                 <Icons.Mail size={12}/> Mailto Link
+                               </a>
+                             </div>
                            </div>
                         </div>
                       </td>

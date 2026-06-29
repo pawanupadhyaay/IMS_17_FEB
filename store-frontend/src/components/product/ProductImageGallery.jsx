@@ -119,7 +119,7 @@ export default function ProductImageGallery({ product, title }) {
       {typeof document !== 'undefined' ? createPortal(zoomModal, document.body) : null}
 
       {/* --- DESKTOP LUXURY GALLERY --- */}
-      <div className="hidden lg:flex lg:h-[600px] lg:flex-row lg:items-stretch lg:gap-5">
+      <div className="hidden lg:flex lg:max-h-[480px] lg:flex-row lg:items-start lg:gap-5 w-full">
         {/* Vertical Thumbnail Rail */}
         {images.length > 1 && (
           <div className="flex w-[88px] shrink-0 flex-col items-center self-stretch">
@@ -187,7 +187,7 @@ export default function ProductImageGallery({ product, title }) {
 
         {/* Main Massive Image Hub */}
         <div
-          className="relative flex aspect-square w-full min-w-0 cursor-zoom-in items-center justify-center overflow-hidden rounded-2xl bg-[#fbfbfb] lg:h-full lg:flex-1"
+          className="relative flex aspect-square w-full min-w-0 cursor-zoom-in items-center justify-center overflow-hidden rounded-2xl bg-[#fbfbfb] lg:flex-1"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onMouseMove={handleMouseMove}
@@ -225,7 +225,7 @@ export default function ProductImageGallery({ product, title }) {
                   }
                 }}
                 className={cn(
-                  'h-[96%] w-[96%] object-contain mix-blend-multiply pointer-events-none transition-transform will-change-transform',
+                  'h-[80%] w-[80%] object-contain mix-blend-multiply pointer-events-none transition-transform will-change-transform',
                   loaded ? 'opacity-100' : 'opacity-0',
                   isZooming ? 'duration-[150ms] ease-out z-20' : 'duration-700 ease-in-out'
                 )}

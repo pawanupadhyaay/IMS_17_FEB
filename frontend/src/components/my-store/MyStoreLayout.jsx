@@ -66,6 +66,7 @@ const MyStoreLayout = () => {
     { name: 'Reviews', path: '/my-store/reviews' },
     { name: 'Customers', path: '/my-store/customers' },
     { name: 'Queries', path: '/my-store/queries' },
+    { name: 'Tickets', path: '/my-store/tickets' },
   ];
 
   if (isOwner) {
@@ -115,6 +116,7 @@ const MyStoreLayout = () => {
               if (item.name === 'Orders') badgeCount = counts.orders;
               if (item.name === 'Reviews') badgeCount = counts.reviews;
               if (item.name === 'Queries') badgeCount = counts.queries;
+              if (item.name === 'Tickets') badgeCount = counts.tickets;
 
               return (
                 <NavLink

@@ -64,6 +64,7 @@ export const useCreateProduct = () => {
 
       queryClient.invalidateQueries({ queryKey: productKeys.lists() })
       queryClient.invalidateQueries({ queryKey: productKeys.brands() })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     },
   })
 }
@@ -84,6 +85,7 @@ export const useUpdateProduct = () => {
 
       queryClient.invalidateQueries({ queryKey: productKeys.lists() })
       queryClient.invalidateQueries({ queryKey: productKeys.brands() })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     },
   })
 }
@@ -183,6 +185,7 @@ export const usePatchProduct = () => {
     onSettled: (data, error, variables) => {
       queryClient.invalidateQueries({ queryKey: productKeys.detail(variables.id) })
       queryClient.invalidateQueries({ queryKey: productKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     },
   })
 }
@@ -195,6 +198,7 @@ export const useDeleteProduct = () => {
     mutationFn: deleteProduct,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.all })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     },
   })
 }
@@ -241,6 +245,7 @@ export const usePatchProductsBulk = () => {
       queryClient.invalidateQueries({ queryKey: productKeys.lists() })
       queryClient.invalidateQueries({ queryKey: productKeys.brands() })
       queryClient.removeQueries({ queryKey: productKeys.details() })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     },
   })
 }
@@ -253,6 +258,7 @@ export const useDeleteProductsBulk = () => {
     mutationFn: deleteProductsBulk,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.all })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     },
   })
 }
