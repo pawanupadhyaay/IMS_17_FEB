@@ -10,9 +10,63 @@ const couponSchema = new mongoose.Schema({
   },
   discountPercentage: {
     type: Number,
-    required: [true, 'Please provide discount percentage'],
-    min: 1,
+    min: 0,
     max: 100,
+    default: 0,
+  },
+  discountType: {
+    type: String,
+    enum: ['percentage', 'fixed', 'shipping', 'buy_x_get_y'],
+    default: 'percentage',
+  },
+  method: {
+    type: String,
+    enum: ['code', 'automatic'],
+    default: 'code',
+  },
+  buyXProduct: {
+    type: String,
+    default: '',
+  },
+  buyXQty: {
+    type: Number,
+    default: 1,
+  },
+  getYProduct: {
+    type: String,
+    default: '',
+  },
+  getYQty: {
+    type: Number,
+    default: 1,
+  },
+  getYDiscount: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 100,
+  },
+  eligibility: {
+    type: String,
+    enum: ['all', 'customer'],
+    default: 'all',
+  },
+  appliesTo: {
+    type: String,
+    enum: ['all', 'collection', 'product'],
+    default: 'all',
+  },
+  discountValue: {
+    type: Number,
+    default: 0,
+  },
+  collectionName: {
+    type: String,
+    default: '',
+  },
+  productName: {
+    type: String,
+    default: '',
   },
   minOrderAmount: {
     type: Number,

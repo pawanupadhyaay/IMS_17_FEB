@@ -309,6 +309,7 @@ exports.createRazorpayOrder = async (req, res) => {
     }
 
     let totalAmount = 0;
+    const orderItemsWithDetails = [];
 
     for (const item of items) {
       if (!item.productId || !item.quantity || item.quantity <= 0) {
@@ -328,6 +329,12 @@ exports.createRazorpayOrder = async (req, res) => {
         });
       }
 
+      orderItemsWithDetails.push({
+        product,
+        quantity: item.quantity,
+        price: product.price || 0
+      });
+
       totalAmount += (product.price || 0) * item.quantity;
     }
 
@@ -339,38 +346,142 @@ exports.createRazorpayOrder = async (req, res) => {
     let discountAmount = 0;
 
     // Apply Coupon Logic
+    let activeCoupon = null;
     if (couponCode) {
-      const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
-      if (coupon) {
-        if (new Date(coupon.validUntil) < new Date()) {
-          return res.status(400).json({ success: false, message: "Coupon has expired" });
-        }
-        if (totalAmount < coupon.minOrderAmount) {
-          return res.status(400).json({ success: false, message: `Minimum order amount for this coupon is ₹${coupon.minOrderAmount}` });
+      activeCoupon = await Coupon.findOne({ code: couponCode.toUpperCase(), isActive: true });
+    } else {
+      // Find the first active automatic coupon
+      const autoCoupons = await Coupon.find({ method: 'automatic', isActive: true });
+      for (const autoCoupon of autoCoupons) {
+        if (new Date(autoCoupon.validUntil) < new Date()) continue;
+        if (totalAmount < autoCoupon.minOrderAmount) continue;
+        
+        // Check eligibility constraints
+        if (autoCoupon.appliesTo === 'collection' && autoCoupon.collectionName) {
+          const targetBrand = autoCoupon.collectionName.toLowerCase();
+          const hasEligible = orderItemsWithDetails.some(item => 
+            (item.product.brand || '').toLowerCase() === targetBrand
+          );
+          if (!hasEligible) continue;
+        } else if (autoCoupon.appliesTo === 'product' && autoCoupon.productName) {
+          const targetProduct = autoCoupon.productName.toLowerCase();
+          const hasEligible = orderItemsWithDetails.some(item => 
+            (item.product.title || '').toLowerCase().includes(targetProduct) ||
+            item.product._id.toString() === targetProduct
+          );
+          if (!hasEligible) continue;
+        } else if (autoCoupon.discountType === 'buy_x_get_y') {
+          const hasX = orderItemsWithDetails.some(item => 
+            (item.product.title || '').toLowerCase().includes(autoCoupon.buyXProduct.toLowerCase()) &&
+            item.quantity >= autoCoupon.buyXQty
+          );
+          const hasY = orderItemsWithDetails.some(item => 
+            (item.product.title || '').toLowerCase().includes(autoCoupon.getYProduct.toLowerCase())
+          );
+          if (!hasX || !hasY) continue;
         }
 
-        discountAmount = totalAmount * (coupon.discountPercentage / 100);
-      } else if (couponCode.toUpperCase() === 'TEST1') {
-        // Special Test Coupon bypasses database check
-        discountAmount = totalAmount; 
-      } else {
-        return res.status(400).json({ success: false, message: "Invalid or inactive coupon code" });
+        activeCoupon = autoCoupon;
+        break; 
       }
+    }
+
+    let shippingOverride = false;
+    let couponUsed = "";
+
+    if (activeCoupon) {
+      if (new Date(activeCoupon.validUntil) < new Date()) {
+        return res.status(400).json({ success: false, message: "Coupon has expired" });
+      }
+      if (totalAmount < activeCoupon.minOrderAmount) {
+        return res.status(400).json({ success: false, message: `Minimum order amount for this coupon is ₹${activeCoupon.minOrderAmount}` });
+      }
+
+      if (activeCoupon.discountType === 'shipping') {
+        shippingOverride = true;
+        discountAmount = 0;
+      } else if (activeCoupon.discountType === 'buy_x_get_y') {
+        const buyXProductTarget = (activeCoupon.buyXProduct || '').toLowerCase();
+        const getYProductTarget = (activeCoupon.getYProduct || '').toLowerCase();
+
+        const buyXItem = orderItemsWithDetails.find(item => 
+          (item.product.title || '').toLowerCase().includes(buyXProductTarget) ||
+          item.product.sku?.toLowerCase() === buyXProductTarget ||
+          item.product._id.toString() === buyXProductTarget
+        );
+        const getYItem = orderItemsWithDetails.find(item => 
+          (item.product.title || '').toLowerCase().includes(getYProductTarget) ||
+          item.product.sku?.toLowerCase() === getYProductTarget ||
+          item.product._id.toString() === getYProductTarget
+        );
+
+        if (!buyXItem || buyXItem.quantity < activeCoupon.buyXQty) {
+          return res.status(400).json({ 
+            success: false, 
+            message: `This coupon requires buying at least ${activeCoupon.buyXQty} of ${activeCoupon.buyXProduct}` 
+          });
+        }
+        if (!getYItem) {
+          return res.status(400).json({ 
+            success: false, 
+            message: `Add ${activeCoupon.getYProduct} to your cart to claim this Buy X Get Y discount!` 
+          });
+        }
+
+        const qtyToDiscount = Math.min(getYItem.quantity, activeCoupon.getYQty);
+        discountAmount = getYItem.price * qtyToDiscount * ((activeCoupon.getYDiscount || 100) / 100);
+      } else {
+        let eligibleAmount = 0;
+        if (activeCoupon.appliesTo === 'collection' && activeCoupon.collectionName) {
+          const targetBrand = activeCoupon.collectionName.toLowerCase();
+          const eligibleItems = orderItemsWithDetails.filter(item => 
+            (item.product.brand || '').toLowerCase() === targetBrand
+          );
+          if (eligibleItems.length === 0) {
+            return res.status(400).json({ success: false, message: `This coupon is only valid for ${activeCoupon.collectionName} watches` });
+          }
+          eligibleAmount = eligibleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        } else if (activeCoupon.appliesTo === 'product' && activeCoupon.productName) {
+          const targetProduct = activeCoupon.productName.toLowerCase();
+          const eligibleItems = orderItemsWithDetails.filter(item => 
+            (item.product.title || '').toLowerCase().includes(targetProduct) ||
+            item.product._id.toString() === targetProduct
+          );
+          if (eligibleItems.length === 0) {
+            return res.status(400).json({ success: false, message: `This coupon is only valid for product: ${activeCoupon.productName}` });
+          }
+          eligibleAmount = eligibleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        } else {
+          eligibleAmount = totalAmount;
+        }
+
+        if (activeCoupon.discountType === 'fixed') {
+          discountAmount = Math.min(activeCoupon.discountValue || 0, eligibleAmount);
+        } else {
+          discountAmount = eligibleAmount * ((activeCoupon.discountPercentage || 0) / 100);
+        }
+      }
+      couponUsed = activeCoupon.code;
+    } else if (couponCode && couponCode.toUpperCase() === 'TEST1') {
+      discountAmount = totalAmount;
+      couponUsed = 'TEST1';
+    } else if (couponCode) {
+      return res.status(400).json({ success: false, message: "Invalid or inactive coupon code" });
     }
 
     // Shipping Logic (Free shipping above ₹50,000, but ₹1 for exactly ₹50,000 for testing)
     let shippingAmount = totalAmount === 50000 ? 1 : (totalAmount > 50000 ? 0 : 99);
+    if (shippingOverride) {
+      shippingAmount = 0;
+    }
     finalAmount = (totalAmount - discountAmount) + shippingAmount;
 
     // --- TEST MODE OVERRIDE ---
-    // If the coupon TEST1 is used, we force everything to 0 and total to ₹1 for production testing.
     if (couponCode && couponCode.toUpperCase() === 'TEST1') {
         shippingAmount = 0;
         finalAmount = 1;
     }
 
-    // JUGAAD: Razorpay strictly rejects amounts < ₹1 (100 paise). 
-    // If a coupon makes the price 0, we clamp it to ₹1 to bypass the Razorpay badge error and still allow checkout.
     if (finalAmount <= 0) {
       finalAmount = 1;
     }
@@ -447,10 +558,13 @@ exports.createRazorpayOrder = async (req, res) => {
        tax: 0,
        shipping: shippingAmount,
        total: finalAmount,
+       couponCode: couponUsed,
+       discountAmount: discountAmount
     });
 
     res.status(200).json({
       success: true,
+      key: process.env.RAZORPAY_KEY_ID,
       originalAmount: totalAmount,
       discountAmount,
       finalAmount,
@@ -744,7 +858,7 @@ exports.verifyPayment = async (req, res) => {
 // @access  Public (Store)
 exports.validateCoupon = async (req, res) => {
   try {
-    const { code, orderAmount } = req.body;
+    const { code, orderAmount, items } = req.body;
 
     if (!code || !orderAmount) {
       return res.status(400).json({ success: false, message: "Coupon code and order amount are required" });
@@ -781,13 +895,77 @@ exports.validateCoupon = async (req, res) => {
       return res.status(400).json({ success: false, message: `Minimum order amount to apply this coupon is ₹${coupon.minOrderAmount}` });
     }
 
+    // Resolve items and calculate discount
+    const Product = mongoose.model("Product");
+    let discountAmount = 0;
+    
+    if (Array.isArray(items) && items.length > 0) {
+      const orderItemsWithDetails = [];
+      for (const item of items) {
+        const product = await Product.findById(item.productId);
+        if (product) {
+          orderItemsWithDetails.push({
+            product,
+            quantity: item.quantity,
+            price: product.price || 0
+          });
+        }
+      }
+
+      // AppliesTo rules
+      let eligibleAmount = 0;
+      if (coupon.appliesTo === 'collection' && coupon.collectionName) {
+        const targetBrand = coupon.collectionName.toLowerCase();
+        const eligibleItems = orderItemsWithDetails.filter(item => 
+          (item.product.brand || '').toLowerCase() === targetBrand
+        );
+        if (eligibleItems.length === 0) {
+          return res.status(400).json({ success: false, message: `This coupon is only valid for ${coupon.collectionName} watches` });
+        }
+        eligibleAmount = eligibleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      } else if (coupon.appliesTo === 'product' && coupon.productName) {
+        const targetProduct = coupon.productName.toLowerCase();
+        const eligibleItems = orderItemsWithDetails.filter(item => 
+          (item.product.title || '').toLowerCase().includes(targetProduct) ||
+          item.product._id.toString() === targetProduct
+        );
+        if (eligibleItems.length === 0) {
+          return res.status(400).json({ success: false, message: `This coupon is only valid for product: ${coupon.productName}` });
+        }
+        eligibleAmount = eligibleItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      } else {
+        eligibleAmount = orderAmount;
+      }
+
+      // Calculate discount amount based on type
+      if (coupon.discountType === 'fixed') {
+        discountAmount = Math.min(coupon.discountValue || 0, eligibleAmount);
+      } else {
+        discountAmount = eligibleAmount * ((coupon.discountPercentage || 0) / 100);
+      }
+    } else {
+      // Fallback if no items array passed
+      if (coupon.appliesTo !== 'all') {
+        return res.status(400).json({ success: false, message: "This coupon is restricted to specific products or collections." });
+      }
+      if (coupon.discountType === 'fixed') {
+        discountAmount = Math.min(coupon.discountValue || 0, orderAmount);
+      } else {
+        discountAmount = orderAmount * ((coupon.discountPercentage || 0) / 100);
+      }
+    }
+
+    // Convert back to dynamic percentage for storefront rendering
+    const discountPct = Number(((discountAmount / orderAmount) * 100).toFixed(4));
+
     res.status(200).json({
       success: true,
       message: "Coupon is valid",
       data: {
         code: coupon.code,
-        discountPercentage: coupon.discountPercentage,
-        minOrderAmount: coupon.minOrderAmount
+        discountPercentage: discountPct,
+        minOrderAmount: coupon.minOrderAmount,
+        isFreeShipping: coupon.discountType === 'shipping'
       }
     });
 

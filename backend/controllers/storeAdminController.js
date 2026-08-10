@@ -250,15 +250,17 @@ exports.createStaff = async (req, res) => {
       canAccessFilters = true
     } = req.body;
     
+    const formattedEmail = email ? email.toLowerCase().trim() : '';
+
     // Check if user exists
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: formattedEmail });
     if (userExists) {
       return res.status(400).json({ success: false, message: "User already exists with this email" });
     }
 
     const staff = await User.create({
-      name,
-      email,
+      name: name ? name.trim() : '',
+      email: formattedEmail,
       mobile,
       password,
       role: 'staff',
@@ -362,11 +364,15 @@ exports.deleteStaff = async (req, res) => {
 exports.updateOrderShipment = async (req, res) => {
   try {
     const { id } = req.params;
-    const { orderStatus, awbCode, courierName, trackingUrl } = req.body;
+    const { orderStatus, awbCode, courierName, trackingUrl, paymentStatus } = req.body;
 
     const order = await Order.findById(id);
     if (!order) {
       return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    if (paymentStatus) {
+      order.paymentStatus = paymentStatus;
     }
 
     if (orderStatus) {

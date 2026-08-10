@@ -59,7 +59,7 @@ function ProductCard({ product }) {
   const { toggleWishlist, isInWishlist } = useWishlist()
   const [isLoaded, setIsLoaded] = useState(false)
   const imageUrl = getProductImage(product)
-  const soldOut = product.soldOut === true
+  const soldOut = product.soldOut === true || (product.inventory !== undefined && product.inventory <= 0)
   
   const href = getProductPath(product)
 

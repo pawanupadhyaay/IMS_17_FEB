@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import storeAdminService from '../../services/storeAdminService';
+import { getStoreUrl } from '../../utils/storeUrl';
 import './MyStoreLayout.css';
 
 const MyStoreLayout = () => {
@@ -64,6 +65,7 @@ const MyStoreLayout = () => {
     { name: 'Discounts & Coupons', path: '/my-store/coupons' },
     { name: 'Blogs', path: '/my-store/blogs' },
     { name: 'Reviews', path: '/my-store/reviews' },
+    { name: 'SEO & Web Traffic', path: '/my-store/seo' },
     { name: 'Customers', path: '/my-store/customers' },
     { name: 'Queries', path: '/my-store/queries' },
     { name: 'Tickets', path: '/my-store/tickets' },
@@ -78,31 +80,31 @@ const MyStoreLayout = () => {
       {/* Top Navigation */}
       <header className="store-admin-header">
         <div className="header-left">
-          <button 
-            className="hamburger-btn" 
+          <button
+            className="hamburger-btn"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             aria-label="Toggle Menu"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               {isSidebarOpen ? (
-                <path d="M18 6 6 18M6 6l12 12"/>
+                <path d="M18 6 6 18M6 6l12 12" />
               ) : (
-                <path d="M4 12h16M4 6h16M4 18h16"/>
+                <path d="M4 12h16M4 6h16M4 18h16" />
               )}
             </svg>
           </button>
           <div className="store-admin-brand" onClick={() => navigate('/my-store/dashboard')}>
             <div className="store-brand-text">
               <h2>Samay Admin</h2>
-              <span>Dashboard</span>
+              <span className="desktop-only">Dashboard</span>
             </div>
           </div>
         </div>
         <div className="store-header-actions">
           <span className="badge-live desktop-only">Live</span>
-          <button className="btn-outline" onClick={() => window.open('https://samaywatch.com', '_blank')}>View Store</button>
-          <button className="btn-outline" onClick={logout}>Logout</button>
-          <button className="btn-ims" onClick={() => navigate('/dashboard')}>IMS</button>
+          <button className="hdr-btn hdr-btn-store" onClick={() => window.open(getStoreUrl(), '_blank')}>View Store</button>
+          <button className="hdr-btn hdr-btn-logout" onClick={logout}>Logout</button>
+          <button className="hdr-btn hdr-btn-ims" onClick={() => navigate('/dashboard')}>IMS</button>
         </div>
       </header>
 
@@ -129,10 +131,10 @@ const MyStoreLayout = () => {
                     {item.name}
                     {badgeCount > 0 && (
                       <span style={{
-                        background: '#ef4444', 
-                        color: 'white', 
-                        fontSize: '0.7rem', 
-                        padding: '2px 6px', 
+                        background: '#ef4444',
+                        color: 'white',
+                        fontSize: '0.7rem',
+                        padding: '2px 6px',
                         borderRadius: '10px',
                         fontWeight: 'bold',
                         lineHeight: '1'

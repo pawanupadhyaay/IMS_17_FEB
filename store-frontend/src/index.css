@@ -10,6 +10,16 @@
   h1, h2, h3, h4, h5, h6 {
     @apply uppercase tracking-tight text-black font-poppins;
   }
+  button,
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"],
+  [role="button"],
+  a,
+  label[for],
+  select {
+    cursor: pointer;
+  }
 }
 
 @layer components {

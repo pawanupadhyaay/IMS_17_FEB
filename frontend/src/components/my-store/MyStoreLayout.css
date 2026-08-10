@@ -77,36 +77,91 @@
   font-weight: 500;
 }
 
-.btn-outline {
-  background: white;
-  border: 1px solid #e0e0e0;
-  color: #333;
-  padding: 0.4rem 1rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.btn-outline:hover {
-  background-color: #f9f9f9;
-}
-
-.btn-ims {
-  background: #0a1638;
-  color: white;
-  border: none;
-  padding: 0.4rem 1rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  cursor: pointer;
+/* Header Button Base Styles */
+.hdr-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
   font-weight: 600;
-  transition: all 0.2s;
+  border-radius: 6px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  line-height: 1;
+  text-decoration: none;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #1e293b;
+  letter-spacing: 0;
 }
 
-.btn-ims:hover {
-  background: #15295c;
+.hdr-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.hdr-btn-ims {
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border: 1px solid #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.hdr-btn-ims:hover {
+  background: #1e293b !important;
+  border-color: #1e293b !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 768px) {
+  .store-admin-header {
+    padding: 8px 12px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .header-left {
+    gap: 6px !important;
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .store-brand-text h2 {
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin: 0 !important;
+  }
+
+  .store-header-actions {
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .hdr-btn {
+    height: 28px !important;
+    padding: 0 8px !important;
+    font-size: 11px !important;
+    border-radius: 5px !important;
+  }
 }
 
 /* Body Layout */
@@ -226,48 +281,7 @@
   }
 }
 
-@media (max-width: 480px) {
-  .store-admin-header {
-    padding: 0.5rem 0.75rem !important;
-  }
 
-  .header-left {
-    gap: 0.5rem !important;
-  }
-
-  .store-brand-text h2 {
-    font-size: 0.85rem !important;
-    letter-spacing: -0.3px;
-  }
-
-  .store-brand-text span {
-    font-size: 0.65rem !important;
-  }
-
-  .store-header-actions {
-    gap: 0.35rem !important;
-  }
-  
-  .store-header-actions .btn-outline,
-  .store-header-actions .btn-ims {
-    padding: 0.35rem 0.55rem !important;
-    font-size: 0.7rem !important;
-    font-weight: 700 !important;
-    border-radius: 8px !important;
-    background: white !important;
-    color: #475569 !important;
-    border: 1px solid #e2e8f0 !important;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-  }
-
-  .store-header-actions .btn-outline:hover,
-  .store-header-actions .btn-ims:hover {
-    border-color: #c6a74e !important;
-    color: #c6a74e !important;
-    background: #f8fafc !important;
-  }
-}
 
 .store-nav {
   background: white;

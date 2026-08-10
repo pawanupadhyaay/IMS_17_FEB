@@ -170,13 +170,13 @@ const StoreStaffs = () => {
           </div>
           <button className="btn-outline" onClick={fetchStaffs}>Refresh</button>
         </div>
-        
+
         {staffs.length === 0 ? (
           <div className="store-empty">
             <div className="empty-icon">👥</div>
             <h3>No staff members found</h3>
             <p>Start by adding your first staff member to help manage your store.</p>
-            <button className="btn-primary" onClick={() => handleOpenModal('add')} style={{marginTop: '1rem'}}>Add Staff</button>
+            <button className="btn-primary" onClick={() => handleOpenModal('add')} style={{ marginTop: '1rem' }}>Add Staff</button>
           </div>
         ) : (
           <table className="store-table">
@@ -259,21 +259,21 @@ const StoreStaffs = () => {
               <h2>{modalMode === 'add' ? 'Add New Staff' : 'Edit Staff Account'}</h2>
               <button className="close-icon-btn" onClick={handleCloseModal}>&times;</button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="staff-form">
               {error && <div className="form-error">{error}</div>}
               {success && <div className="form-success">{success}</div>}
-              
+
               <div className="form-row">
                 <div className="form-field">
                   <label>Full Name</label>
-                  <input 
-                    type="text" 
-                    name="name" 
-                    value={formData.name} 
-                    onChange={handleChange} 
-                    placeholder="e.g. Rahul Sharma" 
-                    required 
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="e.g. Rahul Sharma"
+                    required
                   />
                 </div>
               </div>
@@ -281,13 +281,13 @@ const StoreStaffs = () => {
               <div className="form-row">
                 <div className="form-field">
                   <label>Email Address</label>
-                  <input 
-                    type="email" 
-                    name="email" 
-                    value={formData.email} 
-                    onChange={handleChange} 
-                    placeholder="staff@yourstore.com" 
-                    required 
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="staff@yourstore.com"
+                    required
                   />
                 </div>
               </div>
@@ -295,13 +295,13 @@ const StoreStaffs = () => {
               <div className="form-row">
                 <div className="form-field">
                   <label>Mobile Number</label>
-                  <input 
-                    type="text" 
-                    name="mobile" 
-                    value={formData.mobile} 
-                    onChange={handleChange} 
-                    placeholder="10 digit mobile number" 
-                    required 
+                  <input
+                    type="text"
+                    name="mobile"
+                    value={formData.mobile}
+                    onChange={handleChange}
+                    placeholder="10 digit mobile number"
+                    required
                   />
                 </div>
               </div>
@@ -312,17 +312,17 @@ const StoreStaffs = () => {
                     {modalMode === 'add' ? 'Set Login Password' : 'Change Password (optional)'}
                   </label>
                   <div className="password-input-wrapper">
-                    <input 
-                      type={showPassword ? "text" : "password"} 
-                      name="password" 
-                      value={formData.password} 
-                      onChange={handleChange} 
-                      placeholder={modalMode === 'add' ? "Assign a secure password" : "Leave blank to keep current"} 
-                      required={modalMode === 'add'} 
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder={modalMode === 'add' ? "Assign a secure password" : "Leave blank to keep current"}
+                      required={modalMode === 'add'}
                       minLength="6"
                     />
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="password-toggle-btn"
                       onClick={() => setShowPassword(!showPassword)}
                       title={showPassword ? "Hide password" : "Show password"}

@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
-export default function InquiryForm({ defaultMessage = '', source = 'contact', messageLabel = 'Message / Inquiry' }) {
+export default function InquiryForm({ defaultMessage = '', source = 'contact', messageLabel = 'Message / Inquiry', type = 'query' }) {
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -41,7 +41,8 @@ export default function InquiryForm({ defaultMessage = '', source = 'contact', m
         try {
             const response = await axios.post(`${API_BASE}/api/store/queries`, {
                 ...formData,
-                source // Optional: to track where the query came from
+                source,
+                type
             })
             if (response.data.success) {
                 setIsSuccess(true)

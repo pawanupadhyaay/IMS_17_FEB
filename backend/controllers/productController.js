@@ -6,7 +6,7 @@ const { logActivity } = require("../utils/logActivity");
 const { migrateLegacyImages, migrateLegacyImagesInline } = require("../utils/migrateLegacyImages");
 const { compareProductChanges } = require("../utils/compareProductChanges");
 const { isStorefrontEligible, hasMinimalStorefrontData } = require("../utils/storeEligibility");
-const { migrateUrlsToDoSpaces } = require("../utils/doSpacesImageMigrator");
+const { migrateUrlsToDoSpaces, migrateUrlsToDoSpacesInBackground } = require("../utils/doSpacesImageMigrator");
 
 // Keep image sequence deterministic and sync first image as primary.
 const normalizeImageList = (images) => {
@@ -87,6 +87,7 @@ const getProducts = async (req, res) => {
       // Optimize search: use text index if available, otherwise regex
       const searchRegex = new RegExp(search, "i");
       filter.$or = [
+        { title: searchRegex },
         { brand: searchRegex },
         { sku: searchRegex },
         { category: searchRegex },
@@ -130,17 +131,6 @@ const getProducts = async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit))
       .lean();
-
-    // Lazy migration: Migrate legacy images to product.images[] (non-blocking)
-    // This ensures old products show images without breaking unified pipeline
-    // products.forEach(product => {
-    //   // Inline migration for immediate response
-    //   const migrated = migrateLegacyImagesInline(product)
-    //   Object.assign(product, migrated)
-
-    //   // Background persistence (non-blocking)
-    //   migrateLegacyImages(product)
-    // })
 
     // Debug: Log to verify images are included
     if (products.length > 0) {
@@ -206,14 +196,6 @@ const getProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Lazy migration: Migrate legacy images to product.images[] (non-blocking)
-    // This ensures old products show images without breaking unified pipeline
-    // const migrated = migrateLegacyImagesInline(product)
-    // Object.assign(product, migrated)
-
-    // // Background persistence (non-blocking)
-    // migrateLegacyImages(product)
-
     // Debug: Log to verify images are included
     console.log('GET /api/products/:id - Product images:', product.images);
     res.json({ success: true, data: product });
@@ -223,6 +205,8 @@ const getProduct = async (req, res) => {
 };
 
 // @desc    Create product
+// @route   POST /api/products
+// @access  Private
 // @route   POST /api/products
 // @access  Private
 const createProduct = async (req, res) => {
@@ -238,11 +222,6 @@ const createProduct = async (req, res) => {
       user: req.user.id,
     };
 
-    // Automatically migrate any pasted external image URLs to DigitalOcean Spaces
-    if (productData.images && Array.isArray(productData.images)) {
-      productData.images = await migrateUrlsToDoSpaces(productData.images);
-    }
-
     applyImageNormalization(productData);
 
     productData.isPublished = hasMinimalStorefrontData(productData);
@@ -254,8 +233,10 @@ const createProduct = async (req, res) => {
 
     const product = await Product.create(productData);
 
-    // Debug: Log to verify images are saved and returned
-    console.log('POST /api/products - Created product images:', product.images);
+    // Trigger background DO Spaces migration for any external/local image URLs
+    if (productData.images && Array.isArray(productData.images) && productData.images.length > 0) {
+      migrateUrlsToDoSpacesInBackground(product._id, productData.images);
+    }
 
     // Clear brands cache when new product is created
     clearBrandsCache();
@@ -300,11 +281,6 @@ const updateProduct = async (req, res) => {
     const previousPrice = currentProduct.price || 0;
     const updateData = { ...req.body };
 
-    // Automatically migrate any pasted external image URLs to DigitalOcean Spaces
-    if (updateData.images && Array.isArray(updateData.images)) {
-      updateData.images = await migrateUrlsToDoSpaces(updateData.images);
-    }
-
     applyImageNormalization(updateData);
 
     // Handle oldPrice logic based on checkbox and price change
@@ -342,6 +318,11 @@ const updateProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
+    // Trigger background DO Spaces migration for any external/local image URLs
+    if (updateData.images && Array.isArray(updateData.images) && updateData.images.length > 0) {
+      migrateUrlsToDoSpacesInBackground(product._id, updateData.images);
+    }
+
     // Clear brands cache if brand was updated
     if (req.body.brand !== undefined) {
       clearBrandsCache();
@@ -349,9 +330,6 @@ const updateProduct = async (req, res) => {
 
     // Trigger background stats update
     updateDashboardStatsInBackground();
-
-    // Debug: Log to verify images are updated and returned
-    console.log('PUT /api/products/:id - Updated product images:', product.images);
 
     // Log activity (non-blocking) with changes
     console.log('Activity log triggered: UPDATE', product.sku || 'N/A')
@@ -381,11 +359,6 @@ const patchProduct = async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
 
-    // Automatically migrate any pasted external image URLs to DigitalOcean Spaces
-    if (updates.images && Array.isArray(updates.images)) {
-      updates.images = await migrateUrlsToDoSpaces(updates.images);
-    }
-
     if (Array.isArray(updates.images)) {
       console.log(`[${requestId}] PATCH req.body.images (incoming):`, updates.images.length, updates.images);
     }
@@ -395,7 +368,7 @@ const patchProduct = async (req, res) => {
       return res.status(400).json({ message: "No fields to update" });
     }
 
-    // Fetch existing product to get previous price
+    // Fetch existing product to get previous price and calculate changes
     const currentProduct = await Product.findById(id);
     if (!currentProduct) {
       return res.status(404).json({ message: "Product not found" });
@@ -455,65 +428,28 @@ const patchProduct = async (req, res) => {
     // Remove samePriceChecked from updateObj (it's not a database field)
     delete updateObj.samePriceChecked;
 
-    // Ensure we persist a copy of images (avoid shared reference / mutation issues)
-    if (Array.isArray(updateObj.images)) {
-      console.log(`[${requestId}] PATCH updateObj.images (to DB):`, updateObj.images.length, updateObj.images);
-      updateObj.images = [...updateObj.images];
-    }
-
-    // Create a temporary product object with updates to compare changes
+    // Create a temporary product object with updates to compare changes & publish status
     const updatedProductData = { ...currentProduct.toObject(), ...updateObj };
+    updateObj.isPublished = hasMinimalStorefrontData(updatedProductData);
 
     // Track changes before updating
     const changes = compareProductChanges(currentProduct, updatedProductData);
 
-    const setPayload = { ...updateObj };
-    const objId = mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id;
-    let imagesToSet = null;
+    // Single atomic database update
+    const product = await Product.findByIdAndUpdate(
+      id,
+      { $set: updateObj },
+      { new: true, runValidators: true }
+    ).lean();
 
-    if (Object.prototype.hasOwnProperty.call(setPayload, 'images')) {
-      if (Array.isArray(setPayload.images) && setPayload.images.length > 0) {
-        imagesToSet = [...setPayload.images];
-      }
-      delete setPayload.images;
-    }
-
-    // 1) Update other fields with Mongoose first (so images are not in this payload)
-    const updateResult = await Product.updateOne(
-      { _id: id },
-      Object.keys(setPayload).length > 0 ? { $set: setPayload } : {},
-      { runValidators: true }
-    );
-
-    if (updateResult.matchedCount === 0) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    // 2) Set images with native driver: one atomic update ($set) so order persists.
-    if (imagesToSet) {
-      const arr = imagesToSet.map((url) => String(url));
-      const nativeResult = await Product.collection.updateOne(
-        { _id: objId },
-        { $set: { images: arr } }
-      );
-      console.log(`[${requestId}] native images (atomic set): modified=${nativeResult.modifiedCount}`);
-    }
-
-    const product = await Product.findById(id).lean();
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    // Ensure response has DB image order: read images from raw collection (Mongoose findById can return stale array order)
-    if (imagesToSet) {
-      const rawDoc = await Product.collection.findOne({ _id: objId }, { projection: { images: 1 } });
-      if (rawDoc && Array.isArray(rawDoc.images)) {
-        product.images = rawDoc.images;
-      }
-    }
 
-    const eligible = hasMinimalStorefrontData(product);
-    await Product.updateOne({ _id: id }, { $set: { isPublished: eligible } });
-    product.isPublished = eligible;
+    // Trigger background DO Spaces migration for any external/local image URLs
+    if (updateObj.images && Array.isArray(updateObj.images) && updateObj.images.length > 0) {
+      migrateUrlsToDoSpacesInBackground(id, updateObj.images);
+    }
 
     // Clear brands cache if brand was updated
     if (updates.brand !== undefined) {
@@ -526,7 +462,6 @@ const patchProduct = async (req, res) => {
     console.log(`[${requestId}] PATCH done - saved product.images:`, product?.images);
 
     // Log activity (non-blocking) with changes
-    console.log('Activity log triggered: UPDATE', product.sku || 'N/A')
     logActivity({
       actionType: 'UPDATE',
       brand: product.brand || '',
@@ -538,7 +473,7 @@ const patchProduct = async (req, res) => {
       changes: changes,
     });
 
-    // Return full product (not just updated fields) to ensure images are included
+    // Return full product immediately
     res.json({ success: true, data: product });
   } catch (error) {
     // Handle duplicate SKU error

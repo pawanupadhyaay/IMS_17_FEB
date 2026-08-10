@@ -13,10 +13,10 @@
 }
 
 .store-modal-content {
-  background: white;
+  background-color: #ffffff !important;
   width: 100%;
   max-width: 500px;
-  border-radius: 12px;
+  border-radius: 8px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
@@ -94,18 +94,22 @@
 
 .form-group input[type="text"],
 .form-group input[type="number"],
-.form-group input[type="date"] {
-  padding: 0.75rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  color: #333;
-  transition: border-color 0.2s;
+.form-group input[type="date"],
+.form-group select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #babfc3;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #202223;
+  background-color: #ffffff;
+  transition: border-color 0.15s ease;
+  outline: none;
 }
 
-.form-group input:focus {
-  outline: none;
-  border-color: #0a1638;
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #202223;
+  box-shadow: 0 0 0 1px #202223;
 }
 
 .form-group small {
@@ -139,19 +143,58 @@
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
+  border-top: 1px solid #e1e3e5;
+  padding-top: 1rem;
 }
 
 .btn-cancel {
-  background: #d32f2f;
-  color: white;
-  border: 1px solid #b71c1c;
-  padding: 0.6rem 1.25rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  background: white;
+  color: #202223;
+  border: 1px solid #babfc3;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.1s ease;
 }
 
 .btn-cancel:hover {
-  background: #b71c1c;
+  background: #f6f6f7;
+}
+
+.btn-ims {
+  background: #202223;
+  color: white;
+  border: 1px solid transparent;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+
+.btn-ims:hover {
+  background: #303030;
+}
+
+/* Mobile & Tablet Responsiveness */
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .store-modal-content {
+    max-width: 95% !important;
+    margin: 10px;
+  }
+  .store-modal-footer {
+    flex-direction: column-reverse;
+    gap: 0.5rem;
+  }
+  .btn-cancel, .btn-ims {
+    width: 100%;
+    text-align: center;
+  }
 }

@@ -301,23 +301,15 @@ export default function CheckoutModal({
       e.phone = 'Please enter a genuine mobile number'
     }
 
-    // 3. Address Line 1 & Line 2 Validation (Enforce house/flat number, road/locality, and min length)
+    // 3. Address Line 1 & Line 2 Validation
     const addr1 = form.addressLine1.trim()
     const addr2 = (form.addressLine2 || '').trim()
     const totalAddr = `${addr1} ${addr2}`.trim()
 
     if (!addr1) {
       e.addressLine1 = 'Address Line 1 is required'
-    } else if (addr1.length < 10) {
-      e.addressLine1 = 'Please enter more details (e.g. flat number, building/street name)'
-    }
-
-    if (totalAddr.length < 20) {
-      e.addressLine1 = 'Full address must be at least 20 characters to avoid delivery failures (add landmark/locality)'
-    } else if (!/\d/.test(totalAddr)) {
-      e.addressLine1 = 'Please include a house number, flat number, or plot number'
-    } else if (totalAddr.split(/\s+/).length < 4) {
-      e.addressLine1 = 'Please provide detailed address including colony, street, or landmark'
+    } else if (totalAddr.length < 10) {
+      e.addressLine1 = 'Full address must be at least 10 characters'
     }
 
     if (!form.city.trim()) e.city = 'City is required'

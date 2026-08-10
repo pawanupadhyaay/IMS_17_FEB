@@ -399,6 +399,7 @@ export default function AccountDashboard() {
         price: item.price,
         qty: item.quantity,
         product: item.product,
+        variantSku: item.variantSku,
         image: item.image || item.product?.images?.[0]
       })),
       shippingAddress: {

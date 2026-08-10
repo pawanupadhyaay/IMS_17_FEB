@@ -167,3 +167,62 @@
     font-size: 0.75rem;
   }
 }
+
+/* SEO Dashboard Overhaul Layout Styles */
+.seo-container {
+  padding: 2rem;
+}
+.seo-performance-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.seo-desktop-table {
+  display: block;
+}
+.seo-mobile-cards {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .seo-container {
+    padding: 1rem !important;
+  }
+  .seo-performance-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+  .store-metrics-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+    gap: 12px !important;
+  }
+  .store-page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .store-page-header .page-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .store-page-header .page-actions .date-picker-placeholder {
+    width: 100% !important;
+    justify-content: center !important;
+    box-sizing: border-box;
+  }
+  .store-page-header .page-actions button {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+  .seo-desktop-table {
+    display: none !important;
+  }
+  .seo-mobile-cards {
+    display: block !important;
+  }
+}

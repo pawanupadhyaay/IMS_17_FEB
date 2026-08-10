@@ -274,3 +274,64 @@ exports.sendTicketUpdateNotification = async (query, updateMessage) => {
     console.error("❌ Failed to send support ticket update email:", error.message);
   }
 };
+
+// 4. Send Back-in-Stock Notification Email
+exports.sendBackInStockNotification = async (email, userName, product) => {
+  try {
+    const transporter = getTransporter();
+    if (!email) return;
+
+    const brandName = product.brand || "Premium";
+    const watchTitle = product.title || "Timepiece";
+    const subject = `⚡ Back in Stock: The ${brandName} ${watchTitle} is available now!`;
+
+    // Construct the storefront URL
+    const baseUrl = process.env.STORE_FRONTEND_URL || "https://samaywatch.in";
+    const productPath = product.slug ? `/products/${product.slug}` : `/products/${product._id}`;
+    const productUrl = `${baseUrl}${productPath}`;
+
+    const rawImage = product.images?.[0] || product.image?.url;
+    const imageUrl = typeof rawImage === 'string' ? rawImage : rawImage?.url || "https://via.placeholder.com/200";
+
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #eee; border-radius: 15px; color: #333; line-height: 1.5;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <img src="${logoUrl}" alt="Samay Watch" style="max-height: 40px; margin: 0 auto; display: block;" />
+          <p style="font-size: 10px; color: #888; letter-spacing: 4px; margin-top: 5px; text-transform: uppercase;">Premium Timepieces</p>
+        </div>
+        
+        <h2 style="font-size: 20px; font-weight: normal; border-bottom: 1px solid #eee; padding-bottom: 10px; color: #000; text-align: center;">It's Back in Stock!</h2>
+        <p>Hello <strong>${userName || "Valued Customer"}</strong>,</p>
+        <p>Great news! The luxury timepiece you were waiting for is back in stock and ready to order. We only have limited inventory, so make sure to secure yours before it sells out again!</p>
+        
+        <!-- Product Card Block -->
+        <div style="background: #fafafa; padding: 20px; border-radius: 12px; margin: 25px 0; border: 1px solid #f0f0f0; text-align: center;">
+          <img src="${imageUrl}" style="max-width: 180px; max-height: 180px; object-fit: contain; margin: 0 auto 15px auto; display: block; mix-blend-multiply: true;" alt="${watchTitle}" />
+          <p style="margin: 0 0 5px 0; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #b59410; font-weight: bold;">${brandName}</p>
+          <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #111; font-weight: bold;">${watchTitle}</h3>
+          <p style="margin: 0 0 20px 0; font-size: 15px; font-weight: bold; color: #2e7d32;">Price: ₹${product.price?.toLocaleString('en-IN')}</p>
+          
+          <div style="text-align: center; margin-top: 15px;">
+            <a href="${productUrl}" target="_blank" style="background: #000; color: #fff; text-decoration: none; padding: 12px 30px; font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; border-radius: 6px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">Order Timepiece Now</a>
+          </div>
+        </div>
+        
+        <p style="font-size: 13px; color: #666; text-align: center; margin-top: 20px;">If you have any questions or need custom assistance, feel free to reply directly to this email.</p>
+        
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;" />
+        <p style="font-size: 12px; text-align: center; color: #999; margin: 0;">Samay Watch Concierge Services</p>
+      </div>
+    `;
+
+    await transporter.sendMail({
+      from: senderEmail,
+      to: email,
+      subject: subject,
+      html: htmlContent
+    });
+
+    console.log(`✉️ Back-in-stock notification email dispatched successfully to ${email}`);
+  } catch (error) {
+    console.error("❌ Failed to send back-in-stock notification email:", error.message);
+  }
+};

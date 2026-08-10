@@ -31,13 +31,25 @@ const MENU_ITEMS = [
   { label: 'COLLECTIONS', href: '#', icon: ShoppingBag },
   { label: 'OUR PRESENCE', href: '/our-presence', icon: BookOpen },
   { label: 'ALL PRODUCTS', href: '/all-products', icon: Clock },
+  { label: 'FIND YOUR WATCH', href: '/find-your-watch', icon: Search },
+  { label: 'ABOUT US', href: '/about-us', icon: Info },
+  { label: 'REPAIR & SERVICE', href: '/repair-service', icon: Wrench },
+  { label: 'CONTACT', href: '/contact', icon: Mail },
+]
+
+const MOBILE_MENU_ITEMS = [
+  { label: 'HOME', href: '/', icon: Home },
+  { label: 'COLLECTIONS', href: '#', icon: ShoppingBag },
+  { label: 'OUR PRESENCE', href: '/our-presence', icon: BookOpen },
+  { label: 'ALL PRODUCTS', href: '/all-products', icon: Clock },
+  { label: 'FIND YOUR WATCH', href: '/find-your-watch', icon: Search },
   { label: 'ABOUT US', href: '/about-us', icon: Info },
   { label: 'REPAIR & SERVICE', href: '/repair-service', icon: Wrench },
   { label: 'CONTACT', href: '/contact', icon: Mail },
 ]
 
 const linkClass = cn(
-  'relative py-2.5 text-xs font-medium uppercase tracking-[0.2em] text-neutral-700 transition-colors duration-200',
+  'relative py-2.5 text-[9px] lg:text-[11px] font-semibold uppercase tracking-[0.1em] lg:tracking-[0.2em] text-neutral-700 transition-colors duration-200 whitespace-nowrap',
   'hover:text-gold',
   'after:absolute after:bottom-0 after:left-0 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-gold after:transition-transform after:duration-300 after:content-[""]',
   'hover:after:scale-x-100'
@@ -222,7 +234,7 @@ export default function NavBar() {
       <nav className="relative w-full bg-white">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between border-b border-neutral-200/80 px-4 md:px-8">
           {/* Desktop: Menu items */}
-          <div className="hidden md:flex md:items-center md:gap-8">
+          <div className="hidden md:flex md:items-center gap-3 lg:gap-5 xl:gap-8">
             {MENU_ITEMS.map((item) => {
               if (item.label === 'COLLECTIONS') {
                 return (
@@ -650,7 +662,7 @@ export default function NavBar() {
                 <div className="mb-8">
                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-400 mb-6">Navigation</p>
                    <nav className="flex flex-col gap-2">
-                     {MENU_ITEMS.map((item, idx) => {
+                     {MOBILE_MENU_ITEMS.map((item, idx) => {
                        const isCollections = item.label === 'COLLECTIONS';
                        const Icon = item.icon;
                        return (

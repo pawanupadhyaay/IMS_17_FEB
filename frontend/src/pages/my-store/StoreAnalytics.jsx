@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import storeAdminService from '../../services/storeAdminService';
+import './StoreDashboard.css';
 import './StoreAnalytics.css';
 
 // ─────────────────────────────────────────────────────────────
@@ -8,14 +9,14 @@ import './StoreAnalytics.css';
 const generateDemoOrders = () => {
   const statuses = ['delivered', 'delivered', 'delivered', 'shipped', 'shipped', 'processing', 'pending', 'cancelled'];
   const products = [
-    { title: 'Tissot PRX Powermatic 80',          brand: 'TISSOT',   price: 68000  },
-    { title: 'Rado Captain Cook Automatic',        brand: 'RADO',     price: 230000 },
-    { title: 'Longines HydroConquest Blue Dial',   brand: 'LONGINES', price: 185000 },
-    { title: 'Seiko Presage Cocktail Time',        brand: 'SEIKO',    price: 42000  },
-    { title: 'Balmain Heritage Chrono',            brand: 'BALMAIN',  price: 115000 },
-    { title: 'Citizen Promaster Diver',            brand: 'CITIZEN',  price: 32000  },
-    { title: 'Tag Heuer Carrera Calibre',          brand: 'TAG HEUER',price: 320000 },
-    { title: 'Omega Seamaster 300m',               brand: 'OMEGA',    price: 450000 },
+    { title: 'Tissot PRX Powermatic 80', brand: 'TISSOT', price: 68000 },
+    { title: 'Rado Captain Cook Automatic', brand: 'RADO', price: 230000 },
+    { title: 'Longines HydroConquest Blue Dial', brand: 'LONGINES', price: 185000 },
+    { title: 'Seiko Presage Cocktail Time', brand: 'SEIKO', price: 42000 },
+    { title: 'Balmain Heritage Chrono', brand: 'BALMAIN', price: 115000 },
+    { title: 'Citizen Promaster Diver', brand: 'CITIZEN', price: 32000 },
+    { title: 'Tag Heuer Carrera Calibre', brand: 'TAG HEUER', price: 320000 },
+    { title: 'Omega Seamaster 300m', brand: 'OMEGA', price: 450000 },
   ];
   const customers = [
     'Rajesh Malhotra', 'Priya Sen', 'Vikram Aditya', 'Ananya Roy',
@@ -30,7 +31,7 @@ const generateDemoOrders = () => {
     d.setDate(d.getDate() - daysAgo);
     d.setHours(Math.floor(Math.random() * 23), Math.floor(Math.random() * 60), 0, 0);
     const prod = products[Math.floor(Math.random() * products.length)];
-    const qty  = Math.random() > 0.8 ? 2 : 1;
+    const qty = Math.random() > 0.8 ? 2 : 1;
     orders.push({
       _id: `D${i}`, orderId: `SMY-2026-${8700 + i}`,
       createdAt: d.toISOString(),
@@ -60,22 +61,22 @@ const LineChart = ({ data, color = '#c6a74e', height = 180 }) => {
   let path = `M ${pts[0].x} ${pts[0].y}`;
   for (let i = 0; i < pts.length - 1; i++) {
     const cpX1 = pts[i].x + 28, cpX2 = pts[i + 1].x - 28;
-    path += ` C ${cpX1} ${pts[i].y}, ${cpX2} ${pts[i+1].y}, ${pts[i+1].x} ${pts[i+1].y}`;
+    path += ` C ${cpX1} ${pts[i].y}, ${cpX2} ${pts[i + 1].y}, ${pts[i + 1].x} ${pts[i + 1].y}`;
   }
-  const area = `${path} L ${pts[pts.length-1].x} ${H-10} L ${pts[0].x} ${H-10} Z`;
+  const area = `${path} L ${pts[pts.length - 1].x} ${H - 10} L ${pts[0].x} ${H - 10} Z`;
   return (
     <div style={{ position: 'relative', width: '100%' }}>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="auto" overflow="visible">
         <defs>
-          <linearGradient id={`lg-${color.replace('#','')}`} x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={`lg-${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={color} stopOpacity="0.25" />
             <stop offset="100%" stopColor={color} stopOpacity="0" />
           </linearGradient>
         </defs>
         {[0.2, 0.4, 0.6, 0.8].map((f, i) => (
-          <line key={i} x1="40" x2={W-20} y1={20 + f*(H-40)} y2={20 + f*(H-40)} stroke="#f1f5f9" strokeWidth="1" />
+          <line key={i} x1="40" x2={W - 20} y1={20 + f * (H - 40)} y2={20 + f * (H - 40)} stroke="#f1f5f9" strokeWidth="1" />
         ))}
-        <path d={area} fill={`url(#lg-${color.replace('#','')})`} />
+        <path d={area} fill={`url(#lg-${color.replace('#', '')})`} />
         <path d={path} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
           style={{ filter: `drop-shadow(0 4px 8px ${color}40)` }} />
         {pts.map((p, i) => (
@@ -111,7 +112,7 @@ const BarChart = ({ data, color = '#c6a74e', maxOverride }) => {
     <div style={{ position: 'relative' }}>
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="auto">
         {[0.25, 0.5, 0.75, 1].map((f, i) => (
-          <line key={i} x1="30" x2={W} y1={H - 30 - f*(H-50)} y2={H - 30 - f*(H-50)} stroke="#f1f5f9" strokeWidth="1" />
+          <line key={i} x1="30" x2={W} y1={H - 30 - f * (H - 50)} y2={H - 30 - f * (H - 50)} stroke="#f1f5f9" strokeWidth="1" />
         ))}
         {data.map((d, i) => {
           const barH = Math.max((d.val / maxV) * (H - 50), 2);
@@ -150,7 +151,7 @@ const HBarChart = ({ data, color = '#c6a74e' }) => {
           <div className="hbar-track">
             <div className="hbar-fill" style={{ width: `${(d.val / maxV) * 100}%`, background: color }} />
           </div>
-          <span className="hbar-value">{typeof d.val === 'number' && d.val > 999 ? `₹${(d.val/100000).toFixed(1)}L` : d.val}</span>
+          <span className="hbar-value">{typeof d.val === 'number' && d.val > 999 ? `₹${(d.val / 100000).toFixed(1)}L` : d.val}</span>
         </div>
       ))}
     </div>
@@ -199,6 +200,18 @@ const DonutChart = ({ segments }) => {
 // ─────────────────────────────────────────────────────────────
 // Growth Badge
 // ─────────────────────────────────────────────────────────────
+
+// Helper to dynamically format currency (raw value for < 1L, Lakhs for >= 1L)
+const formatCurrency = (val) => {
+  if (val >= 100000) {
+    return `₹${(val / 100000).toFixed(2)}L`;
+  }
+  return `₹${val.toLocaleString('en-IN')}`;
+};
+
+// ─────────────────────────────────────────────────────────────
+// Main Component
+// ─────────────────────────────────────────────────────────────
 const GrowthBadge = ({ pct }) => {
   const up = pct >= 0;
   return (
@@ -214,20 +227,20 @@ const GrowthBadge = ({ pct }) => {
 const getRange = (filter, custom) => {
   const now = new Date();
   if (filter === 'today') {
-    const s = new Date(now); s.setHours(0,0,0,0); return { s, e: new Date() };
+    const s = new Date(now); s.setHours(0, 0, 0, 0); return { s, e: new Date() };
   }
   if (filter === 'yesterday') {
-    const s = new Date(now); s.setDate(s.getDate()-1); s.setHours(0,0,0,0);
-    const e = new Date(s); e.setHours(23,59,59,999); return { s, e };
+    const s = new Date(now); s.setDate(s.getDate() - 1); s.setHours(0, 0, 0, 0);
+    const e = new Date(s); e.setHours(23, 59, 59, 999); return { s, e };
   }
-  if (filter === 'week') {
-    const s = new Date(now); s.setDate(s.getDate()-6); s.setHours(0,0,0,0); return { s, e: new Date() };
+  if (filter === '3d') {
+    const s = new Date(now); s.setDate(s.getDate() - 2); s.setHours(0, 0, 0, 0); return { s, e: new Date() };
   }
-  if (filter === 'month') {
-    const s = new Date(now); s.setDate(s.getDate()-29); s.setHours(0,0,0,0); return { s, e: new Date() };
+  if (filter === '7d') {
+    const s = new Date(now); s.setDate(s.getDate() - 6); s.setHours(0, 0, 0, 0); return { s, e: new Date() };
   }
   if (filter === 'custom' && custom) {
-    const s = new Date(custom+'T00:00:00'); const e = new Date(custom+'T23:59:59'); return { s, e };
+    const s = new Date(custom + 'T00:00:00'); const e = new Date(custom + 'T23:59:59'); return { s, e };
   }
   return { s: null, e: null };
 };
@@ -246,16 +259,22 @@ const getPrevRange = (filter, custom) => {
 };
 
 // ─────────────────────────────────────────────────────────────
-// Main Component
-// ─────────────────────────────────────────────────────────────
 export default function StoreAnalytics() {
   const [liveOrders, setLiveOrders] = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [isDemoMode, setIsDemoMode] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
-  const [quickFilter, setQuickFilter] = useState('week');
+  const [quickFilter, setQuickFilter] = useState('7d');
   const [selectedDate, setSelectedDate] = useState('');
 
+  const [realtimeData, setRealtimeData] = useState({
+    activeUsers: 0,
+    countries: [],
+    topPages: [],
+    trafficData: []
+  });
+
+  // Fetch orders
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -270,6 +289,44 @@ export default function StoreAnalytics() {
     })();
   }, []);
 
+  // Fetch real-time traffic statistics
+  useEffect(() => {
+    const fetchRealtime = async () => {
+      try {
+        const res = await storeAdminService.getRealtimeAnalytics();
+        if (res.success) {
+          setRealtimeData(res.data);
+        }
+      } catch (e) {
+        console.error('Error fetching real-time analytics:', e);
+      }
+    };
+
+    fetchRealtime();
+    const interval = setInterval(fetchRealtime, 10000); // Auto-refresh every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  // Sync real-time data with demo mode if active
+  const activeRealtime = useMemo(() => {
+    if (isDemoMode) {
+      return {
+        activeUsers: 3,
+        countries: [
+          { country: 'India', count: 2 },
+          { country: 'France', count: 1 }
+        ],
+        topPages: [
+          { url: '/', count: 18 },
+          { url: '/all-products', count: 9 },
+          { url: '/products/tissot-prx-powermatic-80', count: 5 }
+        ],
+        trafficData: []
+      };
+    }
+    return realtimeData;
+  }, [isDemoMode, realtimeData]);
+
   const sourceOrders = isDemoMode ? DEMO_ORDERS_ALL : liveOrders;
 
   // Current period orders
@@ -283,8 +340,8 @@ export default function StoreAnalytics() {
   }, [sourceOrders, quickFilter, selectedDate]);
 
   // KPIs
-  const currRevenue = useMemo(() => currOrders.reduce((s, o) => s + (o.totalAmount || 0), 0), [currOrders]);
-  const prevRevenue = useMemo(() => prevOrders.reduce((s, o) => s + (o.totalAmount || 0), 0), [prevOrders]);
+  const currRevenue = useMemo(() => currOrders.reduce((s, o) => s + (o.total || o.totalAmount || 0), 0), [currOrders]);
+  const prevRevenue = useMemo(() => prevOrders.reduce((s, o) => s + (o.total || o.totalAmount || 0), 0), [prevOrders]);
   const revenueGrowth = prevRevenue ? ((currRevenue - prevRevenue) / prevRevenue) * 100 : 0;
 
   const currOrderCount = currOrders.length;
@@ -296,41 +353,32 @@ export default function StoreAnalytics() {
   const aovGrowth = prevAOV ? ((currAOV - prevAOV) / prevAOV) * 100 : 0;
 
   // Delivered rate
-  const deliveredCount = currOrders.filter(o => o.status === 'delivered').length;
+  const deliveredCount = currOrders.filter(o => (o.orderStatus || o.status) === 'delivered').length;
   const deliveryRate = currOrderCount ? Math.round((deliveredCount / currOrderCount) * 100) : 0;
-  const prevDeliveredCount = prevOrders.filter(o => o.status === 'delivered').length;
+  const prevDeliveredCount = prevOrders.filter(o => (o.orderStatus || o.status) === 'delivered').length;
   const prevDeliveryRate = prevOrderCount ? Math.round((prevDeliveredCount / prevOrderCount) * 100) : 0;
   const deliveryGrowth = prevDeliveryRate ? deliveryRate - prevDeliveryRate : 0;
 
   // Revenue chart data
   const revenueChartData = useMemo(() => {
-    const DAYS = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
     if (quickFilter === 'today' || quickFilter === 'yesterday' || quickFilter === 'custom') {
       const { s } = getRange(quickFilter, selectedDate);
       if (!s) return [];
-      return [0,4,8,12,16,20,22].map((h, i, arr) => {
-        const start = new Date(s); start.setHours(h,0,0,0);
-        const end = new Date(s); end.setHours(i < arr.length-1 ? arr[i+1] : 24,0,0,0);
-        const val = currOrders.filter(o => { const d = new Date(o.createdAt); return d>=start&&d<end; })
-          .reduce((sum, o) => sum+(o.totalAmount||0), 0);
-        return { label: h < 12 ? `${h===0?12:h}AM` : `${h===12?12:h-12}PM`, val };
+      return [0, 4, 8, 12, 16, 20, 22].map((h, i, arr) => {
+        const start = new Date(s); start.setHours(h, 0, 0, 0);
+        const end = new Date(s); end.setHours(i < arr.length - 1 ? arr[i + 1] : 24, 0, 0, 0);
+        const val = currOrders.filter(o => { const d = new Date(o.createdAt); return d >= start && d < end; })
+          .reduce((sum, o) => sum + (o.total || o.totalAmount || 0), 0);
+        return { label: h < 12 ? `${h === 0 ? 12 : h}AM` : `${h === 12 ? 12 : h - 12}PM`, val };
       });
     }
-    if (quickFilter === 'month') {
-      const now = new Date();
-      return Array.from({length:7}, (_,i) => {
-        const start = new Date(now); start.setDate(start.getDate()-(6-i)*4-3); start.setHours(0,0,0,0);
-        const end = new Date(now); end.setDate(end.getDate()-(6-i)*4); end.setHours(23,59,59,999);
-        const val = currOrders.filter(o => { const d=new Date(o.createdAt); return d>=start&&d<=end; })
-          .reduce((s,o) => s+(o.totalAmount||0), 0);
-        return { label: `W${i+1}`, val };
-      });
-    }
-    return Array.from({length:7}, (_,i) => {
-      const d = new Date(); d.setDate(d.getDate()-(6-i));
+    const daysCount = quickFilter === '3d' ? 3 : 7;
+    return Array.from({ length: daysCount }, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() - (daysCount - 1 - i));
       const ds = d.toISOString().split('T')[0];
-      const val = currOrders.filter(o => o.createdAt&&new Date(o.createdAt).toISOString().startsWith(ds))
-        .reduce((s,o) => s+(o.totalAmount||0), 0);
+      const val = currOrders.filter(o => o.createdAt && new Date(o.createdAt).toISOString().startsWith(ds))
+        .reduce((s, o) => s + (o.total || o.totalAmount || 0), 0);
       return { label: DAYS[d.getDay()], val };
     });
   }, [currOrders, quickFilter, selectedDate]);
@@ -338,78 +386,75 @@ export default function StoreAnalytics() {
   // Orders count chart (same buckets)
   const ordersChartData = useMemo(() => revenueChartData.map(d => {
     const { s: rangeStart, e: rangeEnd } = getRange(quickFilter, selectedDate);
-    return { ...d, val: currOrders.filter(o => {
-      const od = new Date(o.createdAt);
-      // approximate: just count all in each bucket based on order of revenue chart
-      return true;
-    }).length }; // we compute properly below
+    return {
+      ...d, val: currOrders.filter(o => {
+        const od = new Date(o.createdAt);
+        // approximate: just count all in each bucket based on order of revenue chart
+        return true;
+      }).length
+    }; // we compute properly below
   }), [revenueChartData]);
 
   // Proper orders count per bucket
   const ordersCountData = useMemo(() => {
-    const DAYS = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
     if (quickFilter === 'today' || quickFilter === 'yesterday' || quickFilter === 'custom') {
       const { s } = getRange(quickFilter, selectedDate);
       if (!s) return [];
-      return [0,4,8,12,16,20,22].map((h, i, arr) => {
-        const start = new Date(s); start.setHours(h,0,0,0);
-        const end = new Date(s); end.setHours(i<arr.length-1?arr[i+1]:24,0,0,0);
-        const val = currOrders.filter(o => { const d=new Date(o.createdAt); return d>=start&&d<end; }).length;
-        return { label: h<12?`${h===0?12:h}AM`:`${h===12?12:h-12}PM`, val };
+      return [0, 4, 8, 12, 16, 20, 22].map((h, i, arr) => {
+        const start = new Date(s); start.setHours(h, 0, 0, 0);
+        const end = new Date(s); end.setHours(i < arr.length - 1 ? arr[i + 1] : 24, 0, 0, 0);
+        const val = currOrders.filter(o => { const d = new Date(o.createdAt); return d >= start && d < end; }).length;
+        return { label: h < 12 ? `${h === 0 ? 12 : h}AM` : `${h === 12 ? 12 : h - 12}PM`, val };
       });
     }
-    if (quickFilter === 'month') {
-      const now = new Date();
-      return Array.from({length:7},(_,i)=>{
-        const start=new Date(now); start.setDate(start.getDate()-(6-i)*4-3); start.setHours(0,0,0,0);
-        const end=new Date(now); end.setDate(end.getDate()-(6-i)*4); end.setHours(23,59,59,999);
-        const val=currOrders.filter(o=>{const d=new Date(o.createdAt);return d>=start&&d<=end;}).length;
-        return {label:`W${i+1}`,val};
-      });
-    }
-    return Array.from({length:7},(_,i)=>{
-      const d=new Date();d.setDate(d.getDate()-(6-i));
-      const ds=d.toISOString().split('T')[0];
-      const val=currOrders.filter(o=>o.createdAt&&new Date(o.createdAt).toISOString().startsWith(ds)).length;
-      return {label:DAYS[d.getDay()],val};
+    const daysCount = quickFilter === '3d' ? 3 : 7;
+    return Array.from({ length: daysCount }, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() - (daysCount - 1 - i));
+      const ds = d.toISOString().split('T')[0];
+      const val = currOrders.filter(o => o.createdAt && new Date(o.createdAt).toISOString().startsWith(ds)).length;
+      return { label: DAYS[d.getDay()], val };
     });
   }, [currOrders, quickFilter, selectedDate]);
 
   // Status breakdown
   const statusData = useMemo(() => {
     const counts = { delivered: 0, shipped: 0, processing: 0, pending: 0, cancelled: 0 };
-    currOrders.forEach(o => { if (counts[o.status] !== undefined) counts[o.status]++; });
+    currOrders.forEach(o => {
+      const s = (o.orderStatus || o.status)?.toLowerCase();
+      if (counts[s] !== undefined) counts[s]++;
+    });
     return [
-      { label: 'Delivered', val: counts.delivered,  color: '#10b981' },
-      { label: 'Shipped',   val: counts.shipped,    color: '#3b82f6' },
-      { label: 'Processing',val: counts.processing, color: '#f97316' },
-      { label: 'Pending',   val: counts.pending,    color: '#eab308' },
-      { label: 'Cancelled', val: counts.cancelled,  color: '#ef4444' },
+      { label: 'Delivered', val: counts.delivered, color: '#10b981' },
+      { label: 'Shipped', val: counts.shipped, color: '#3b82f6' },
+      { label: 'Processing', val: counts.processing, color: '#f97316' },
+      { label: 'Pending', val: counts.pending, color: '#eab308' },
+      { label: 'Cancelled', val: counts.cancelled, color: '#ef4444' },
     ];
   }, [currOrders]);
 
   // Revenue by day of week (always)
   const revenueByDow = useMemo(() => {
-    const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     return DAYS.map((label, i) => ({
       label,
       val: currOrders.filter(o => new Date(o.createdAt).getDay() === i)
-        .reduce((s, o) => s + (o.totalAmount || 0), 0),
+        .reduce((s, o) => s + (o.total || o.totalAmount || 0), 0),
     }));
   }, [currOrders]);
 
   // Revenue by hour of day
   const revenueByHour = useMemo(() => {
     const buckets = [
-      { label:'Night\n12-6AM', hours:[0,1,2,3,4,5] },
-      { label:'Morning\n6-12PM', hours:[6,7,8,9,10,11] },
-      { label:'Afternoon\n12-6PM', hours:[12,13,14,15,16,17] },
-      { label:'Evening\n6-12AM', hours:[18,19,20,21,22,23] },
+      { label: 'Night\n12-6AM', hours: [0, 1, 2, 3, 4, 5] },
+      { label: 'Morning\n6-12PM', hours: [6, 7, 8, 9, 10, 11] },
+      { label: 'Afternoon\n12-6PM', hours: [12, 13, 14, 15, 16, 17] },
+      { label: 'Evening\n6-12AM', hours: [18, 19, 20, 21, 22, 23] },
     ];
     return buckets.map(b => ({
       label: b.label.split('\n')[0],
       val: currOrders.filter(o => b.hours.includes(new Date(o.createdAt).getHours()))
-        .reduce((s, o) => s + (o.totalAmount || 0), 0),
+        .reduce((s, o) => s + (o.total || o.totalAmount || 0), 0),
     }));
   }, [currOrders]);
 
@@ -417,22 +462,22 @@ export default function StoreAnalytics() {
   const topProductsByRevenue = useMemo(() => {
     const map = {};
     currOrders.forEach(o => {
-      const name = o.items?.[0]?.product?.title || 'Unknown';
-      map[name] = (map[name] || 0) + (o.totalAmount || 0);
+      const name = o.items?.[0]?.product?.title || o.items?.[0]?.name || 'Unknown';
+      map[name] = (map[name] || 0) + (o.total || o.totalAmount || 0);
     });
-    return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,5)
-      .map(([label, val]) => ({ label: label.length > 22 ? label.slice(0,22)+'…' : label, val }));
+    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5)
+      .map(([label, val]) => ({ label: label.length > 22 ? label.slice(0, 22) + '…' : label, val }));
   }, [currOrders]);
 
   // Top products by order count
   const topProductsByOrders = useMemo(() => {
     const map = {};
     currOrders.forEach(o => {
-      const name = o.items?.[0]?.product?.title || 'Unknown';
+      const name = o.items?.[0]?.product?.title || o.items?.[0]?.name || 'Unknown';
       map[name] = (map[name] || 0) + 1;
     });
-    return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,5)
-      .map(([label, val]) => ({ label: label.length > 22 ? label.slice(0,22)+'…' : label, val }));
+    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5)
+      .map(([label, val]) => ({ label: label.length > 22 ? label.slice(0, 22) + '…' : label, val }));
   }, [currOrders]);
 
   // Top customers
@@ -441,13 +486,13 @@ export default function StoreAnalytics() {
     currOrders.forEach(o => {
       const name = o.user?.name || 'Unknown';
       if (!map[name]) map[name] = { name, email: o.user?.email || '', spend: 0, orders: 0 };
-      map[name].spend  += (o.totalAmount || 0);
+      map[name].spend += (o.total || o.totalAmount || 0);
       map[name].orders += 1;
     });
-    return Object.values(map).sort((a,b)=>b.spend-a.spend).slice(0,5);
+    return Object.values(map).sort((a, b) => b.spend - a.spend).slice(0, 5);
   }, [currOrders]);
 
-  const filterLabel = { today:'Today', yesterday:'Yesterday', week:'This Week', month:'This Month', all:'All Time', custom: selectedDate||'Custom' }[quickFilter];
+  const filterLabel = { today: 'Today', yesterday: 'Yesterday', '3d': 'Last 3 days', '7d': 'Last 7 days', custom: selectedDate || 'Custom' }[quickFilter];
 
   // ───────────────── Render ─────────────────
   return (
@@ -460,29 +505,105 @@ export default function StoreAnalytics() {
           <h1 className="an-title">Analytics</h1>
           <p className="an-desc">Deep-dive into revenue, orders, products, and customer behaviour.</p>
         </div>
-        <div className="an-mode-row">
-          <span className={`an-mode-dot ${isDemoMode ? 'demo' : 'live'}`} />
-          <span className="an-mode-label">{isDemoMode ? 'Demo Data' : 'Live Data'}</span>
+        <div className="header-right-controls">
+          <div className="mode-toggle-container">
+            <span className={`mode-label ${!isDemoMode ? 'active' : ''}`}>Live</span>
+            <label className="switch-control">
+              <input type="checkbox" checked={isDemoMode} onChange={() => setIsDemoMode(!isDemoMode)} />
+              <span className="switch-slider" />
+            </label>
+            <span className={`mode-label ${isDemoMode ? 'active' : ''}`}>Demo</span>
+          </div>
         </div>
       </div>
 
-      {/* Date Filter Bar */}
       <div className="an-filter-bar">
         <div className="an-filter-pills">
-          {[['today','Today'],['yesterday','Yesterday'],['week','This Week'],['month','This Month'],['all','All Time']].map(([k,l])=>(
-            <button key={k} className={`an-filter-pill ${quickFilter===k?'active':''}`}
-              onClick={()=>{setQuickFilter(k);setSelectedDate('');}}>
+          {[['today', 'Today'], ['yesterday', 'Yesterday'], ['3d', 'Last 3 days'], ['7d', 'Last 7 days']].map(([k, l]) => (
+            <button key={k} className={`an-filter-pill ${quickFilter === k ? 'active' : ''}`}
+              onClick={() => { setQuickFilter(k); setSelectedDate(''); }}>
               {l}
             </button>
           ))}
         </div>
         <div className="an-date-pick">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
           </svg>
           <input type="date" className="an-date-input" value={selectedDate}
             max={new Date().toISOString().split('T')[0]}
-            onChange={e=>{setSelectedDate(e.target.value);setQuickFilter('custom');}} />
+            onChange={e => { setSelectedDate(e.target.value); setQuickFilter('custom'); }} />
+        </div>
+      </div>
+
+      {/* Real-Time Traffic Widget (Google Analytics Sync) */}
+      <div className="an-card real-time-widget" style={{ borderLeft: '4px solid #008060', marginBottom: '1.5rem' }}>
+        <div className="an-card-header" style={{ borderBottom: 'none', paddingBottom: '0.5rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="live-pulse-dot" style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#108043', boxShadow: '0 0 0 0 rgba(16, 128, 67, 0.7)', animation: 'pulse-ring 1.8s infinite' }} />
+              <h3 className="an-card-title" style={{ margin: 0 }}>Real-Time Store Traffic</h3>
+            </div>
+            <p className="an-card-sub">Live synced with storefront traffic</p>
+          </div>
+          <span className="an-card-badge green" style={{ background: '#e6f4ea', color: '#108043', fontWeight: 600, padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>Live Syncing</span>
+        </div>
+
+        <div className="real-time-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '2rem', padding: '0 1.5rem 1.5rem' }}>
+          {/* Left: Active Users & Countries */}
+          <div className="real-time-left" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div>
+              <div style={{ fontSize: '3.5rem', fontWeight: 800, color: '#202223', lineHeight: 1 }}>
+                {activeRealtime.activeUsers || 0}
+              </div>
+              <span style={{ fontSize: '13px', color: '#6d7175', fontWeight: 600 }}>
+                Active users on site (last 30 min)
+              </span>
+            </div>
+
+            {/* Countries table */}
+            <div>
+              <h4 style={{ fontSize: '12px', fontWeight: 700, color: '#202223', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>
+                Active Users by Country
+              </h4>
+              {activeRealtime.countries && activeRealtime.countries.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {activeRealtime.countries.map((c, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+                      <span style={{ color: '#202223', fontWeight: 500 }}>{c.country}</span>
+                      <span style={{ color: '#6d7175', fontWeight: 600 }}>{c.count}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <span style={{ fontSize: '13px', color: '#94a3b8' }}>Waiting for visitors...</span>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Top Pages */}
+          <div className="real-time-right" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', borderLeft: '1px solid #e1e3e5', paddingLeft: '2rem' }}>
+            {/* Top viewed pages */}
+            <div>
+              <h4 style={{ fontSize: '12px', fontWeight: 700, color: '#202223', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>
+                Top Active Pages
+              </h4>
+              {activeRealtime.topPages && activeRealtime.topPages.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {activeRealtime.topPages.map((p, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
+                      <span style={{ color: '#2c6ecb', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80%' }}>
+                        {p.url}
+                      </span>
+                      <span style={{ color: '#202223', fontWeight: 600 }}>{p.count} view{p.count > 1 ? 's' : ''}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <span style={{ fontSize: '13px', color: '#94a3b8' }}>No page views logged yet.</span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -491,11 +612,11 @@ export default function StoreAnalytics() {
         <div className="an-kpi-card">
           <div className="an-kpi-top">
             <span className="an-kpi-label">Total Revenue</span>
-            <div className="an-kpi-icon" style={{background:'#fdfaf2',color:'#c6a74e'}}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            <div className="an-kpi-icon" style={{ background: '#fdfaf2', color: '#c6a74e' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
             </div>
           </div>
-          <div className="an-kpi-val" style={{color:'#10b981'}}>₹{(currRevenue/100000).toFixed(2)}L</div>
+          <div className="an-kpi-val" style={{ color: '#10b981' }}>{formatCurrency(currRevenue)}</div>
           <div className="an-kpi-foot">
             <GrowthBadge pct={revenueGrowth} />
             <span className="an-kpi-vs">vs prev period</span>
@@ -505,8 +626,8 @@ export default function StoreAnalytics() {
         <div className="an-kpi-card">
           <div className="an-kpi-top">
             <span className="an-kpi-label">Total Orders</span>
-            <div className="an-kpi-icon" style={{background:'#fff7ed',color:'#f97316'}}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            <div className="an-kpi-icon" style={{ background: '#fff7ed', color: '#f97316' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" /></svg>
             </div>
           </div>
           <div className="an-kpi-val">{currOrderCount}</div>
@@ -519,8 +640,8 @@ export default function StoreAnalytics() {
         <div className="an-kpi-card">
           <div className="an-kpi-top">
             <span className="an-kpi-label">Avg Order Value</span>
-            <div className="an-kpi-icon" style={{background:'#f0f7ff',color:'#3b82f6'}}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            <div className="an-kpi-icon" style={{ background: '#f0f7ff', color: '#3b82f6' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" /></svg>
             </div>
           </div>
           <div className="an-kpi-val">₹{currAOV.toLocaleString('en-IN')}</div>
@@ -533,8 +654,8 @@ export default function StoreAnalytics() {
         <div className="an-kpi-card">
           <div className="an-kpi-top">
             <span className="an-kpi-label">Delivery Rate</span>
-            <div className="an-kpi-icon" style={{background:'#f0fdf4',color:'#10b981'}}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <div className="an-kpi-icon" style={{ background: '#f0fdf4', color: '#10b981' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12" /></svg>
             </div>
           </div>
           <div className="an-kpi-val">{deliveryRate}%</div>
@@ -550,7 +671,7 @@ export default function StoreAnalytics() {
         <div className="an-card-header">
           <div>
             <h3 className="an-card-title">Revenue Trend</h3>
-            <p className="an-card-sub">{filterLabel} · ₹{(currRevenue/100000).toFixed(2)}L total</p>
+            <p className="an-card-sub">{filterLabel} · {formatCurrency(currRevenue)} total</p>
           </div>
           <span className="an-card-badge gold">Revenue</span>
         </div>
@@ -684,10 +805,10 @@ export default function StoreAnalytics() {
         </div>
         <div className="an-comparison-grid">
           {[
-            { label:'Revenue', curr: currRevenue, prev: prevRevenue, fmt: v=>`₹${(v/100000).toFixed(2)}L` },
-            { label:'Orders',  curr: currOrderCount, prev: prevOrderCount, fmt: v=>v },
-            { label:'Avg Order Value', curr: currAOV, prev: prevAOV, fmt: v=>`₹${v.toLocaleString('en-IN')}` },
-            { label:'Delivery Rate', curr: deliveryRate, prev: prevDeliveryRate, fmt: v=>`${v}%` },
+            { label: 'Revenue', curr: currRevenue, prev: prevRevenue, fmt: formatCurrency },
+            { label: 'Orders', curr: currOrderCount, prev: prevOrderCount, fmt: v => v },
+            { label: 'Avg Order Value', curr: currAOV, prev: prevAOV, fmt: v => `₹${v.toLocaleString('en-IN')}` },
+            { label: 'Delivery Rate', curr: deliveryRate, prev: prevDeliveryRate, fmt: v => `${v}%` },
           ].map((m, i) => {
             const maxV = Math.max(m.curr, m.prev, 1);
             return (
@@ -695,11 +816,11 @@ export default function StoreAnalytics() {
                 <span className="an-comp-label">{m.label}</span>
                 <div className="an-comp-bars">
                   <div className="an-comp-bar-wrap">
-                    <div className="an-comp-bar curr" style={{width:`${(m.curr/maxV)*100}%`}} />
+                    <div className="an-comp-bar curr" style={{ width: `${(m.curr / maxV) * 100}%` }} />
                     <span className="an-comp-val">{m.fmt(m.curr)}</span>
                   </div>
                   <div className="an-comp-bar-wrap">
-                    <div className="an-comp-bar prev" style={{width:`${(m.prev/maxV)*100}%`}} />
+                    <div className="an-comp-bar prev" style={{ width: `${(m.prev / maxV) * 100}%` }} />
                     <span className="an-comp-val muted">{m.fmt(m.prev)}</span>
                   </div>
                 </div>

@@ -8,22 +8,22 @@ const SERVICES = [
     {
         title: 'Battery Replacement',
         description: 'Quick and authentic battery replacement ensuring long-lasting performance for your quartz timepieces.',
-        icon: <Zap className="size-6 text-gold" />,
+        icon: Zap,
     },
     {
         title: 'Complete Overhaul',
         description: 'A comprehensive dismantling, cleaning, lubrication, and reassembly of the movement to factory standards.',
-        icon: <Wrench className="size-6 text-gold" />,
+        icon: Wrench,
     },
     {
         title: 'Polishing & Refinishing',
         description: 'Restore the original luster of your case and bracelet with our expert polishing services.',
-        icon: <ShieldCheck className="size-6 text-gold" />,
+        icon: ShieldCheck,
     },
     {
         title: 'Water Resistance',
         description: 'State-of-the-art pressure testing to guarantee your watch remains protected against moisture.',
-        icon: <Droplets className="size-6 text-gold" />,
+        icon: Droplets,
     },
 ]
 
@@ -115,7 +115,7 @@ const FAQS = [
     },
     {
         question: 'Are original spare parts used for all brands?',
-        answer: 'As an authorized service center, we use 100% original parts sourced directly from the manufacturers to maintain your watch\'s value and integrity.'
+        answer: 'Working with authorized brand partners, we use 100% original spare parts sourced directly from the respective manufacturers to maintain your watch\'s value and integrity.'
     }
 ]
 
@@ -275,7 +275,7 @@ export default function RepairService() {
                                             </div>
 
                                             {idx < DOOR_TO_DOOR_STEPS.length - 1 && (
-                                                <div className="relative z-10 flex justify-start py-1 pl-[11px]">
+                                                <div className="relative z-10 flex justify-start py-1 pl-[4px]">
                                                     <ChevronDown className="size-4 text-red-500" strokeWidth={2.5} />
                                                 </div>
                                             )}
@@ -434,32 +434,33 @@ export default function RepairService() {
                             <h2 className="font-serif text-2xl font-normal text-neutral-900 md:text-5xl">Mastery in Every Detail</h2>
                         </div>
                         <p className="max-w-xl text-base text-neutral-500 md:text-lg">
-                            Our atelier is equipped with the latest Swiss instrumentation, allowing us to perform everything from routine maintenance to complex mechanical restorations with absolute precision.
+                            As a leading luxury watch retailer, our state-of-the-art service network is equipped to maintain and restore premium timepieces from the world's most prestigious Swiss and international brands with absolute precision.
                         </p>
                     </div>
 
                     {/* Slider on Mobile, Grid on Desktop */}
                     <div className="hide-scrollbar flex snap-x snap-mandatory overflow-x-auto gap-6 lg:grid lg:grid-cols-4 lg:overflow-x-visible lg:gap-8">
-                        {SERVICES.map((service, idx) => (
-                            <motion.div
-                                key={service.title}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: idx * 0.1 }}
-                                className="group relative min-w-[280px] snap-center overflow-hidden rounded-3xl bg-white p-8 shadow-sm transition-all hover:-translate-y-2 hover:shadow-2xl md:p-10 lg:min-w-0"
-                            >
-                                <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-50 group-hover:bg-gold transition-colors">
-                                    <div className="group-hover:text-white transition-colors">
-                                        {service.icon}
+                        {SERVICES.map((service, idx) => {
+                            const IconComponent = service.icon
+                            return (
+                                <motion.div
+                                    key={service.title}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    className="group relative min-w-[280px] snap-center overflow-hidden rounded-3xl bg-white p-8 shadow-sm transition-all hover:-translate-y-2 hover:shadow-2xl md:p-10 lg:min-w-0"
+                                >
+                                    <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-50 group-hover:bg-gold transition-colors">
+                                        <IconComponent className="size-6 text-gold group-hover:text-white transition-colors" />
                                     </div>
-                                </div>
-                                <h4 className="mb-4 font-serif text-2xl font-medium text-neutral-900 lowercase first-letter:uppercase">{service.title}</h4>
-                                <p className="text-sm font-medium leading-relaxed text-neutral-500 italic">
-                                    "{service.description}"
-                                </p>
-                            </motion.div>
-                        ))}
+                                    <h4 className="mb-4 font-serif text-2xl font-medium text-neutral-900 lowercase first-letter:uppercase">{service.title}</h4>
+                                    <p className="text-sm font-medium leading-relaxed text-neutral-500 italic">
+                                        "{service.description}"
+                                    </p>
+                                </motion.div>
+                            )
+                        })}
                     </div>
                 </div>
             </section>

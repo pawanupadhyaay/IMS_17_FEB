@@ -54,10 +54,16 @@ function ProductCard({ product }) {
       className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-neutral-100/90 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.06)] md:rounded-none md:border-0 md:shadow-none"
     >
       <div className="relative aspect-[1/1.2] w-full overflow-hidden rounded-xl sm:rounded-2xl bg-[#efefef] p-3 sm:p-4">
-        {/* NEW Badge */}
-        <div className="absolute left-3 top-3 z-10 text-[10px] font-bold text-neutral-600 md:text-[9px]">
-          NEW
-        </div>
+        {/* NEW Badge or SOLD OUT Badge */}
+        {(product.soldOut === true || (product.inventory !== undefined && product.inventory <= 0)) ? (
+          <div className="absolute left-3 top-3 z-10 text-[10px] font-bold text-red-600 uppercase tracking-widest bg-white/95 px-1.5 py-0.5 shadow-sm rounded">
+            SOLD OUT
+          </div>
+        ) : (
+          <div className="absolute left-3 top-3 z-10 text-[10px] font-bold text-neutral-600 md:text-[9px]">
+            NEW
+          </div>
+        )}
 
         <button
           type="button"

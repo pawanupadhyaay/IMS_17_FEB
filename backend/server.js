@@ -78,6 +78,8 @@ app.use("/api/import", require("./routes/importRoutes"));
 app.use("/api/activity-logs", require("./routes/activityLogRoutes"));
 app.use("/api/store-admin", require("./routes/storeAdminRoutes"));
 app.use("/api/blogs", require("./routes/blogRoutes"));
+app.use("/api/analytics", require("./routes/analyticsRoutes"));
+app.use("/api/notifications", require("./routes/notificationRoutes"));
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -133,6 +135,8 @@ startServer().catch((e) => {
   console.error("❌ Failed to start server:", e);
   process.exit(1);
 });
+
+// Trigger reload for Port 587 SMTP configuration update
 
 
 

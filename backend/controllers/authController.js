@@ -66,9 +66,12 @@ const login = async (req, res) => {
         .json({ message: "Please provide email and password" });
     }
 
-    // Check for user
+    // Check for user (case-insensitive & trimmed matching)
     const formattedEmail = email.toLowerCase().trim();
-    const user = await User.findOne({ email: formattedEmail }).select("+password");
+    const escapedEmail = formattedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const user = await User.findOne({
+      email: { $regex: new RegExp(`^${escapedEmail}$`, 'i') }
+    }).select("+password");
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }

@@ -28,7 +28,7 @@ function hasProductImage(doc) {
 function hasMinimalStorefrontData(doc) {
   if (!doc) return false;
   return (
-    (doc.inventory || 0) > 0 &&
+    (doc.inventory ?? 0) >= 0 &&
     hasNonEmptyTitle(doc) &&
     hasProductImage(doc)
   );
@@ -62,14 +62,14 @@ function storefrontImageMongoCondition() {
  * immediately and dynamically reflected on the ecommerce website.
  * 
  * Rules:
- *   1. inventory > 0
+ *   1. inventory >= 0
  *   2. non-empty title
  *   3. at least 1 valid image
  */
 function getStrictStorefrontFilter(customFilters = {}) {
   return {
     ...customFilters,
-    inventory: { $gt: 0 },
+    inventory: { $gte: 0 },
     title: storefrontTitleMongoCondition(),
     ...storefrontImageMongoCondition(),
   };

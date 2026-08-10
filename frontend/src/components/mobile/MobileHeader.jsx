@@ -80,11 +80,11 @@ const MobileHeader = ({ user, onLogout, onCreateProduct, onExportCSV, onImportCS
               <>
                 <button className="mobile-menu-item" onClick={() => handleMenuAction('mystore')}>
                   <span className="menu-icon">🏪</span>
-                  <span style={{fontWeight: 'bold'}}>My Store</span>
+                  <span style={{ fontWeight: 'bold' }}>My Store</span>
                 </button>
                 <button className="mobile-menu-item" onClick={() => handleMenuAction('staffs')}>
                   <span className="menu-icon">👥</span>
-                  <span style={{fontWeight: 'bold'}}>Staff Management</span>
+                  <span style={{ fontWeight: 'bold' }}>Staff Management</span>
                 </button>
               </>
             )}

@@ -13,6 +13,7 @@ import StoreCoupons from './pages/my-store/StoreCoupons'
 import StoreBlogs from './pages/my-store/StoreBlogs'
 import StoreReviews from './pages/my-store/StoreReviews'
 import StoreCustomers from './pages/my-store/StoreCustomers'
+import StoreCustomersList from './pages/my-store/StoreCustomersList'
 import StoreQueries from './pages/my-store/StoreQueries'
 import StoreStaffs from './pages/my-store/StoreStaffs'
 import StoreAnalytics from './pages/my-store/StoreAnalytics'
@@ -52,7 +53,8 @@ function App() {
                 <Route path="coupons" element={<StoreCoupons />} />
                 <Route path="blogs" element={<StoreBlogs />} />
                 <Route path="reviews" element={<StoreReviews />} />
-                <Route path="customers" element={<StoreCustomers />} />
+                <Route path="seo" element={<StoreCustomers />} />
+                <Route path="customers" element={<StoreCustomersList />} />
                 <Route path="queries" element={<StoreQueries type="query" />} />
                 <Route path="tickets" element={<StoreQueries type="ticket" />} />
                 <Route path="staffs" element={<StoreStaffs />} />

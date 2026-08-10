@@ -75,7 +75,7 @@ const StoreBlogs = () => {
   }, []);
 
   const handleDelete = async (id) => {
-    if(window.confirm('Are you sure you want to delete this blog post?')) {
+    if (window.confirm('Are you sure you want to delete this blog post?')) {
       try {
         await storeAdminService.deleteBlog(id);
         toast.success('Blog deleted');
@@ -129,7 +129,7 @@ const StoreBlogs = () => {
             <p className="metric-label">LIVE ARTICLES</p>
             <div className="metric-icon-box green">✅</div>
           </div>
-          <h2 style={{color: '#00b86b'}}>{liveBlogs}</h2>
+          <h2 style={{ color: '#00b86b' }}>{liveBlogs}</h2>
         </div>
         <div className="metric-card">
           <div className="metric-card-header">
@@ -150,7 +150,7 @@ const StoreBlogs = () => {
             <button className="btn-outline" onClick={fetchBlogs}><RefreshIcon /> Refresh List</button>
           </div>
         </div>
-        
+
         {blogs.length === 0 ? (
           <div className="store-empty">
             <div className="empty-icon">📝</div>
@@ -179,9 +179,9 @@ const StoreBlogs = () => {
                     <tr key={blog._id}>
                       <td>
                         <div style={{ position: 'relative', width: '60px', height: '45px', borderRadius: '4px', overflow: 'hidden', backgroundColor: '#f5f5f5' }}>
-                          <img 
-                            src={blog.coverImage || 'https://via.placeholder.com/60x45'} 
-                            alt="Cover" 
+                          <img
+                            src={blog.coverImage || 'https://via.placeholder.com/60x45'}
+                            alt="Cover"
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         </div>
@@ -198,9 +198,9 @@ const StoreBlogs = () => {
                         </div>
                       </td>
                       <td>
-                        <a 
-                          href={`http://localhost:5173/blog/${blog.slug}`} 
-                          target="_blank" 
+                        <a
+                          href={`http://localhost:5173/blog/${blog.slug}`}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="text-xs font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1"
                         >
@@ -231,9 +231,9 @@ const StoreBlogs = () => {
                 <div className="store-blog-mobile-card" key={blog._id}>
                   <div className="blog-card-header">
                     <div className="blog-card-img">
-                      <img 
-                        src={blog.coverImage || 'https://via.placeholder.com/60x45'} 
-                        alt="Cover" 
+                      <img
+                        src={blog.coverImage || 'https://via.placeholder.com/60x45'}
+                        alt="Cover"
                       />
                     </div>
                     <div className="blog-card-info">
@@ -244,12 +244,12 @@ const StoreBlogs = () => {
                       {blog.status}
                     </span>
                   </div>
-                  
+
                   <div className="blog-card-body">
                     <p className="blog-card-excerpt">{blog.excerpt || 'No excerpt provided...'}</p>
-                    <a 
-                      href={`http://localhost:5173/blog/${blog.slug}`} 
-                      target="_blank" 
+                    <a
+                      href={`http://localhost:5173/blog/${blog.slug}`}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="blog-card-url"
                     >
@@ -276,7 +276,7 @@ const StoreBlogs = () => {
       </div>
 
       {showModal && (
-        <BlogModal 
+        <BlogModal
           blog={selectedBlog}
           onClose={() => setShowModal(false)}
           onSuccess={() => {

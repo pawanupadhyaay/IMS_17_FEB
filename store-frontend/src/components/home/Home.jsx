@@ -13,6 +13,7 @@ import ServiceSection from "./ServiceSection"
 import TestimonialsSection from "./TestimonialsSection"
 import NewsletterSection from "./NewsletterSection"
 import SocialMediaSection from "./SocialMediaSection"
+import FindYourWatch from "./FindYourWatch"
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -247,6 +248,7 @@ export default function Home() {
       <RevealSection><ServiceSection /></RevealSection>
       <RevealSection><TestimonialsSection /></RevealSection>
       <RevealSection><LatestBlogSection /></RevealSection>
+      <RevealSection><FindYourWatch /></RevealSection>
       <RevealSection><SocialMediaSection /></RevealSection>
       <RevealSection><NewsletterSection /></RevealSection>
     </div>

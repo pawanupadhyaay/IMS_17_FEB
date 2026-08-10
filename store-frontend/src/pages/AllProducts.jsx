@@ -56,6 +56,11 @@ function ProductCard({ product, brandMap = {} }) {
         "relative flex aspect-square w-full items-center justify-center overflow-hidden bg-transparent p-6 sm:p-8 rounded-xl transition-colors",
         !isLoaded && "animate-pulse bg-neutral-50"
       )}>
+        {(product.soldOut === true || (product.inventory !== undefined && product.inventory <= 0)) && (
+          <span className="absolute left-2 top-2 z-10 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest text-red-600 bg-white px-1.5 py-0.5 shadow-sm">
+            Sold Out
+          </span>
+        )}
         {imageUrl ? (
           <img
             src={getSquareImage(imageUrl, 400)}

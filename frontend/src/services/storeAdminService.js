@@ -108,6 +108,10 @@ const storeAdminService = {
   replyToQuery: async (id, replyMessage) => {
     const response = await api.post(`/store-admin/queries/${id}/reply`, { replyMessage });
     return response.data;
+  },
+  getRealtimeAnalytics: async () => {
+    const response = await api.get('/analytics/realtime');
+    return response.data;
   }
 };
 

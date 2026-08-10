@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom"
+import { useEffect } from "react"
 import Header from "./components/header/Header"
 import Home from "./components/home/Home"
 import Footer from "./components/layout/Footer"
@@ -10,6 +11,7 @@ import AboutUs from "./pages/AboutUs"
 import RepairService from "./pages/RepairService"
 import ContactUs from "./pages/ContactUs"
 import Policies from "./pages/Policies"
+import FindYourWatchPage from "./pages/FindYourWatchPage"
 import ScrollToTop from "./components/layout/ScrollToTop"
 import { AuthProvider } from "./contexts/AuthContext"
 import { WishlistProvider } from "./contexts/WishlistContext"
@@ -50,6 +52,50 @@ function Layout() {
     setOrderErrorData
   } = useCart()
 
+  const location = useLocation()
+
+  useEffect(() => {
+    const logPageView = async () => {
+      try {
+        // Detect country (fallback to India)
+        let country = 'India'
+        try {
+          const geoRes = await fetch('https://ipapi.co/json/')
+          const geoData = await geoRes.json()
+          if (geoData.country_name) {
+            country = geoData.country_name
+          }
+        } catch (e) {
+          // Fallback if geo IP API is blocked or offline
+        }
+
+        // Get or create a simple session ID
+        let sessionId = localStorage.getItem('samay_session_id')
+        if (!sessionId) {
+          sessionId = 'sess_' + Math.random().toString(36).substring(2, 15)
+          localStorage.setItem('samay_session_id', sessionId)
+        }
+
+        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+        
+        await fetch(`${API_BASE}/api/analytics/pageview`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            url: location.pathname,
+            country,
+            sessionId
+          })
+        })
+      } catch (err) {
+        console.error('Failed to log pageview:', err)
+      }
+    }
+    logPageView()
+  }, [location.pathname])
+
   return (
     <div className="w-full bg-white">
       <Header />
@@ -67,6 +113,7 @@ function Layout() {
           <Route path="/blog" element={<BlogList />} />
           <Route path="/blog/:slug" element={<BlogDetail />} />
           <Route path="/our-presence" element={<OurPresence />} />
+          <Route path="/find-your-watch" element={<FindYourWatchPage />} />
           <Route path="/policies/:type" element={<Policies />} />
         </Routes>
       </main>

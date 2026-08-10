@@ -52,7 +52,7 @@ export function CartProvider({ children }) {
     return appliedCoupon ? cartTotal * (appliedCoupon.discountPercentage / 100) : 0
   }, [cartTotal, appliedCoupon])
 
-  const shippingValue = (cartTotal === 50000) ? 1 : ((cartTotal > 50000 || cartItems.length === 0 || appliedCoupon?.code === 'TEST1') ? 0 : 99)
+  const shippingValue = (cartTotal === 50000) ? 1 : ((cartTotal > 50000 || cartItems.length === 0 || appliedCoupon?.code === 'TEST1' || appliedCoupon?.isFreeShipping) ? 0 : 99)
   let grandTotal = Math.max(0, cartTotal - discountAmount + shippingValue)
   
   if (appliedCoupon?.code === 'TEST1') {
@@ -141,7 +141,14 @@ export function CartProvider({ children }) {
 
   const applyCoupon = async (code) => {
      try {
-      const res = await axios.post(`${API_BASE}/api/store/validate-coupon`, { code, orderAmount: cartTotal })
+      const res = await axios.post(`${API_BASE}/api/store/validate-coupon`, { 
+        code, 
+        orderAmount: cartTotal,
+        items: cartItems.map(item => ({
+          productId: item.productId || item._id,
+          quantity: item.qty || 1
+        }))
+      })
       if (res.data.success) {
         setAppliedCoupon(res.data.data)
         return { success: true }
@@ -231,8 +238,10 @@ export function CartProvider({ children }) {
         return;
       }
 
+      const rzpKey = response.data?.key || import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_STu8FnhvKju55L';
+
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        key: rzpKey,
         amount: order.amount,
         currency: "INR",
         name: "Samay Watch",

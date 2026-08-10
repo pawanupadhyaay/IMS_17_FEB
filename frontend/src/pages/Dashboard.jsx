@@ -90,7 +90,7 @@ const Dashboard = () => {
   const products = productsData?.data || []
   const pagination = productsData?.pagination || { page: 1, limit: pageSize, total: 0, pages: 0 }
   const allProducts = allProductsData?.data || []
-  
+
   // Build brands dynamically from products
   const brands = useMemo(() => {
     return allProducts
@@ -281,9 +281,9 @@ const Dashboard = () => {
           onExportCSV={handleOpenExport}
           onImportCSV={() => setShowImportModal(true)}
         />
-        
+
         {(user?.canViewStats !== false) && <MobileStatsBar stats={stats} />}
-        
+
         {(user?.canAccessFilters !== false) && (
           <MobileSearchBar
             value={filters.search}
@@ -298,8 +298,8 @@ const Dashboard = () => {
             <div className="mobile-loading">Loading...</div>
           ) : (
             <>
-              <BrandSummaryBar 
-                selectedBrand={filters.brand} 
+              <BrandSummaryBar
+                selectedBrand={filters.brand}
                 brandStats={productsData?.brandStats}
                 hasActiveFilters={hasActiveFilters}
                 onClearFilters={handleClearFilters}
@@ -315,19 +315,19 @@ const Dashboard = () => {
                 page={pagination.page}
                 limit={pagination.limit}
               />
-              {pagination.pages > 0 && 
-               !showFilterSheet && 
-               !showModal && 
-               !showActionSheet && 
-               !showDeleteConfirm && (
-                <div style={{ paddingBottom: selectedIds.size > 0 ? '100px' : '0' }}>
-                  <MobilePagination
-                    page={pagination.page}
-                    totalPages={pagination.pages}
-                    onPageChange={handlePageChange}
-                  />
-                </div>
-              )}
+              {pagination.pages > 0 &&
+                !showFilterSheet &&
+                !showModal &&
+                !showActionSheet &&
+                !showDeleteConfirm && (
+                  <div style={{ paddingBottom: selectedIds.size > 0 ? '100px' : '0' }}>
+                    <MobilePagination
+                      page={pagination.page}
+                      totalPages={pagination.pages}
+                      onPageChange={handlePageChange}
+                    />
+                  </div>
+                )}
             </>
           )}
         </main>
@@ -339,9 +339,9 @@ const Dashboard = () => {
             products={products}
             onBulkEdit={async (updates) => {
               try {
-                await patchProductsBulkMutation.mutateAsync({ 
-                  ids: Array.from(selectedIds), 
-                  data: updates 
+                await patchProductsBulkMutation.mutateAsync({
+                  ids: Array.from(selectedIds),
+                  data: updates
                 })
                 setSelectedIds(new Set())
               } catch (error) {
@@ -354,8 +354,8 @@ const Dashboard = () => {
                 return
               }
               try {
-                await deleteProductsBulkMutation.mutateAsync({ 
-                  ids: Array.from(selectedIds) 
+                await deleteProductsBulkMutation.mutateAsync({
+                  ids: Array.from(selectedIds)
                 })
                 setSelectedIds(new Set())
               } catch (error) {
@@ -365,9 +365,9 @@ const Dashboard = () => {
             }}
             onBulkCategoryChange={async (category) => {
               try {
-                await patchProductsBulkMutation.mutateAsync({ 
-                  ids: Array.from(selectedIds), 
-                  data: { category } 
+                await patchProductsBulkMutation.mutateAsync({
+                  ids: Array.from(selectedIds),
+                  data: { category }
                 })
                 setSelectedIds(new Set())
               } catch (error) {
@@ -531,7 +531,7 @@ const Dashboard = () => {
         ) : (
           <>
             {user?.canViewStats !== false && <StatsCards stats={stats} />}
-            
+
             <div className="dashboard-controls">
               {user?.canAccessFilters !== false && (
                 <div className="controls-left">
@@ -666,8 +666,8 @@ const Dashboard = () => {
               </div>
             )}
 
-            <BrandSummaryBar 
-              selectedBrand={filters.brand} 
+            <BrandSummaryBar
+              selectedBrand={filters.brand}
               brandStats={productsData?.brandStats}
               hasActiveFilters={hasActiveFilters}
             />
@@ -692,9 +692,9 @@ const Dashboard = () => {
                 products={products}
                 onBulkEdit={async (updates) => {
                   try {
-                    await patchProductsBulkMutation.mutateAsync({ 
-                      ids: Array.from(selectedIds), 
-                      data: updates 
+                    await patchProductsBulkMutation.mutateAsync({
+                      ids: Array.from(selectedIds),
+                      data: updates
                     })
                     setSelectedIds(new Set())
                   } catch (error) {
@@ -707,8 +707,8 @@ const Dashboard = () => {
                     return
                   }
                   try {
-                    await deleteProductsBulkMutation.mutateAsync({ 
-                      ids: Array.from(selectedIds) 
+                    await deleteProductsBulkMutation.mutateAsync({
+                      ids: Array.from(selectedIds)
                     })
                     setSelectedIds(new Set())
                   } catch (error) {
@@ -718,9 +718,9 @@ const Dashboard = () => {
                 }}
                 onBulkCategoryChange={async (category) => {
                   try {
-                    await patchProductsBulkMutation.mutateAsync({ 
-                      ids: Array.from(selectedIds), 
-                      data: { category } 
+                    await patchProductsBulkMutation.mutateAsync({
+                      ids: Array.from(selectedIds),
+                      data: { category }
                     })
                     setSelectedIds(new Set())
                   } catch (error) {

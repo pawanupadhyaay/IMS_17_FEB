@@ -177,6 +177,40 @@ productSchema.index({ brand: 1, isPublished: 1 });
 // Category filtering
 productSchema.index({ category: 1, isPublished: 1 });
 
+// Post-save hook (for doc.save() used in bulk CSV import)
+productSchema.post('save', async function(doc) {
+  try {
+    if (doc && doc.inventory > 0) {
+      const { checkAndNotifyBackInStock } = require('../utils/notificationService');
+      // Trigger notification dispatch asynchronously
+      setImmediate(() => {
+        checkAndNotifyBackInStock(doc._id, doc.inventory).catch(err => {
+          console.error("Failed to run back-in-stock notifications after save:", err);
+        });
+      });
+    }
+  } catch (err) {
+    console.error("Error in product save post-hook:", err);
+  }
+});
+
+// Post-findOneAndUpdate hook (for findByIdAndUpdate used in manual edit)
+productSchema.post('findOneAndUpdate', async function(doc) {
+  try {
+    if (doc && doc.inventory > 0) {
+      const { checkAndNotifyBackInStock } = require('../utils/notificationService');
+      // Trigger notification dispatch asynchronously
+      setImmediate(() => {
+        checkAndNotifyBackInStock(doc._id, doc.inventory).catch(err => {
+          console.error("Failed to run back-in-stock notifications after findOneAndUpdate:", err);
+        });
+      });
+    }
+  } catch (err) {
+    console.error("Error in product findOneAndUpdate post-hook:", err);
+  }
+});
+
 const Product = mongoose.model("Product", productSchema);
 
 // ---------- VALIDATION ----------

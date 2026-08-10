@@ -143,7 +143,45 @@ async function migrateUrlsToDoSpaces(images) {
   return results.filter(Boolean);
 }
 
+/**
+ * Triggers DO Spaces migration in background (non-blocking) for a given product ID
+ * @param {string|Object} productId - Product ID
+ * @param {Array<string>} images - Array of image URLs
+ */
+function migrateUrlsToDoSpacesInBackground(productId, images) {
+  if (!productId || !Array.isArray(images) || images.length === 0) return;
+
+  // Quick check: does any URL actually need migration?
+  const needsMigration = images.some(
+    (img) =>
+      typeof img === "string" &&
+      (img.startsWith("http://") || img.startsWith("https://")) &&
+      !img.includes("digitaloceanspaces.com")
+  );
+
+  if (!needsMigration) return;
+
+  setImmediate(async () => {
+    try {
+      const mongoose = require("mongoose");
+      const { Product } = require("../models/Product");
+
+      const migrated = await migrateUrlsToDoSpaces(images);
+      if (JSON.stringify(migrated) !== JSON.stringify(images)) {
+        await Product.updateOne(
+          { _id: productId },
+          { $set: { images: migrated } }
+        );
+        console.log(`✅ Background DO Spaces migration completed for product ${productId}`);
+      }
+    } catch (err) {
+      console.error(`❌ Background DO Spaces migration failed for product ${productId}:`, err.message);
+    }
+  });
+}
+
 module.exports = {
   migrateUrlsToDoSpaces,
+  migrateUrlsToDoSpacesInBackground,
   uploadUrlToSpaces,
 };

@@ -172,6 +172,8 @@ export default function ProductDetail() {
   const [recommended, setRecommended] = useState([])
   const [showStickyBar, setShowStickyBar] = useState(false)
   const [flyingImage, setFlyingImage] = useState(null)
+  const [isSubscribed, setIsSubscribed] = useState(false)
+  const [submittingSub, setSubmittingSub] = useState(false)
 
   const [openSpecs, setOpenSpecs] = useState(true)
   const [openAccordion, setOpenAccordion] = useState('description')
@@ -181,6 +183,44 @@ export default function ProductDetail() {
   const { toggleWishlist } = useWishlist()
   const { addToCart: globalAddToCart, initiateCheckout: globalInitiateCheckout } = useCart()
   const { user, openAuthModal } = useAuth()
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    setSubmittingSub(true);
+    try {
+      const emailInput = document.getElementById('notify-email')?.value;
+      const payload = { productId: product._id };
+      if (!user) {
+        if (!emailInput || !emailInput.includes('@')) {
+          toast.error("Please enter a valid email address.");
+          setSubmittingSub(false);
+          return;
+        }
+        payload.email = emailInput.trim();
+      }
+
+      const headers = {};
+      const token = localStorage.getItem("storeToken");
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const res = await axios.post(`${API_BASE}/api/notifications/subscribe`, payload, { headers });
+      if (res.data?.success) {
+        setIsSubscribed(true);
+        toast.success("We'll notify you as soon as this item is back in stock!", {
+          id: 'notify-toast'
+        });
+      } else {
+        toast.error(res.data?.message || "Failed to subscribe");
+      }
+    } catch (err) {
+      console.error("Subscription error:", err);
+      toast.error(err.response?.data?.message || "Failed to subscribe");
+    } finally {
+      setSubmittingSub(false);
+    }
+  };
 
   const toggleAccordion = (id) => setOpenAccordion(openAccordion === id ? null : id)
   const toggleFaq = (idx) => setOpenFaq(openFaq === idx ? null : idx)
@@ -212,6 +252,7 @@ export default function ProductDetail() {
     let cancelled = false
 
     async function run() {
+      setIsSubscribed(false)
       setLoading(true)
       setError('')
       const data = await fetchProductBySlug(slug)
@@ -557,18 +598,59 @@ export default function ProductDetail() {
             </div>
 
             {/* Action Buttons — Horizontal Layout on Desktop */}
-            <div className="mt-4 flex flex-col sm:flex-row gap-3 max-w-[450px]">
-              {isInquiryOnlyBrand ? (
-                <button
-                  type="button"
-                  onClick={handleWhatsAppShare}
-                  className="cursor-pointer flex-1 min-h-[52px] flex items-center justify-center gap-3 rounded-lg bg-neutral-900 py-3.5 text-[12px] font-bold uppercase tracking-widest text-white shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition-all active:scale-[0.98] lg:hover:translate-y-[-2px] lg:hover:bg-black"
-                >
-                  <WhatsAppIcon className="size-5" />
-                  Inquire Us
-                </button>
+            <div className="mt-4 max-w-[450px]">
+              {product.inventory <= 0 ? (
+                <div className="space-y-3 animate-fadeIn">
+                  <div className="bg-red-50 border border-red-100 text-red-700 p-3 rounded-lg text-[12px] font-bold uppercase tracking-wider flex items-center gap-2">
+                    <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
+                    Sold Out
+                  </div>
+                  {isSubscribed ? (
+                    <div className="bg-green-50 border border-green-200 text-green-800 p-3.5 rounded-lg text-[12px] font-bold uppercase tracking-wider flex items-center gap-2">
+                      <Check className="size-4 text-green-600" strokeWidth={3} />
+                      Subscribed! We will notify you.
+                    </div>
+                  ) : user ? (
+                    <button
+                      type="button"
+                      disabled={submittingSub}
+                      onClick={handleSubscribe}
+                      className="cursor-pointer w-full min-h-[52px] rounded-lg bg-black text-white py-3.5 text-[12px] font-bold uppercase tracking-widest hover:bg-neutral-800 transition active:scale-[0.98] disabled:bg-neutral-400 disabled:cursor-not-allowed"
+                    >
+                      {submittingSub ? 'Subscribing...' : 'Notify Me When Available'}
+                    </button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input 
+                        type="email" 
+                        placeholder="Enter your email to get notified..." 
+                        className="flex-1 px-4 py-3 border border-neutral-300 rounded-lg text-xs outline-none focus:border-neutral-800"
+                        id="notify-email"
+                      />
+                      <button
+                        type="button"
+                        disabled={submittingSub}
+                        onClick={handleSubscribe}
+                        className="bg-black text-white px-6 py-3.5 rounded-lg text-[12px] font-bold uppercase tracking-widest hover:bg-neutral-800 transition active:scale-[0.98] disabled:bg-neutral-400 disabled:cursor-not-allowed"
+                      >
+                        {submittingSub ? '...' : 'Notify Me'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : isInquiryOnlyBrand ? (
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={handleWhatsAppShare}
+                    className="cursor-pointer flex-1 min-h-[52px] flex items-center justify-center gap-3 rounded-lg bg-neutral-900 py-3.5 text-[12px] font-bold uppercase tracking-widest text-white shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition-all active:scale-[0.98] lg:hover:translate-y-[-2px] lg:hover:bg-black"
+                  >
+                    <WhatsAppIcon className="size-5" />
+                    Inquire Us
+                  </button>
+                </div>
               ) : (
-                <>
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     type="button"
                     onClick={() => {
@@ -586,7 +668,7 @@ export default function ProductDetail() {
                     )}
                     disabled={product.inventory <= 0}
                   >
-                    {product.inventory <= 0 ? 'Sold Out' : 'Buy Now'}
+                    Buy Now
                   </button>
                   <button
                     type="button"
@@ -606,9 +688,9 @@ export default function ProductDetail() {
                     disabled={product.inventory <= 0}
                   >
                     <svg className="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-                    {product.inventory <= 0 ? 'Out of Stock' : 'Add to Cart'}
+                    Add to Cart
                   </button>
-                </>
+                </div>
               )}
             </div>
 
@@ -1181,7 +1263,32 @@ export default function ProductDetail() {
             </div>
             <div className="flex items-center gap-8">
               <span className="font-poppins text-[20px] font-bold tracking-tight text-black">{formatPrice(product.price)}</span>
-              {isInquiryOnlyBrand ? (
+              {product.inventory <= 0 ? (
+                isSubscribed ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="rounded bg-green-600 px-10 py-3 text-[11px] font-bold uppercase tracking-widest text-white cursor-not-allowed"
+                  >
+                    SUBSCRIBED
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      if (user) {
+                        handleSubscribe(e);
+                      } else {
+                        document.getElementById('notify-email')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        document.getElementById('notify-email')?.focus();
+                      }
+                    }}
+                    className="cursor-pointer rounded bg-red-600 px-10 py-3 text-[11px] font-bold uppercase tracking-widest text-white transition-all hover:bg-red-700 shadow-lg hover:translate-y-[-1px] active:translate-y-0"
+                  >
+                    NOTIFY ME
+                  </button>
+                )
+              ) : isInquiryOnlyBrand ? (
                 <button
                   type="button"
                   onClick={handleWhatsAppShare}
