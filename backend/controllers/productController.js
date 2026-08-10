@@ -123,7 +123,7 @@ const getProducts = async (req, res) => {
     // Get products with projection - only fetch fields needed for list view
     // Include legacy fields for migration: imageUrl, image.url
     // This reduces payload size significantly (especially for 10k+ products)
-    const projection = "title brand sku category inventory price oldPrice images imageUrl image.url createdAt warrantyPeriod";
+    const projection = "title brand sku category inventory price oldPrice images imageUrl image.url createdAt warrantyPeriod waterResistance dialColor strapColor movement gender caseMaterial caseShape strapMaterial";
     const products = await Product.find(filter)
       .select(projection)
       .sort(sortObj)

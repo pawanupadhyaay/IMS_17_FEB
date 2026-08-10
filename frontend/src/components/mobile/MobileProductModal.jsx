@@ -16,11 +16,31 @@ import {
   STRAP_COLOR_OPTIONS,
   CASE_SHAPE_OPTIONS,
   STRAP_MATERIAL_OPTIONS,
+  getSavedCustomOptions,
+  saveCustomOption,
 } from '../../constants/productOptions'
 import { useMemo } from 'react'
 import './MobileProductModal.css'
 
-const MobileProductModal = ({ product, mode, onClose, onSave, brands = [], isOwner, dynamicDialColors = [], dynamicStrapColors = [], canEditSeo }) => {
+const MobileProductModal = ({
+  product,
+  mode,
+  onClose,
+  onSave,
+  brands = [],
+  isOwner,
+  dynamicDialColors = [],
+  dynamicStrapColors = [],
+  dynamicCategories = [],
+  dynamicCaseMaterials = [],
+  dynamicWaterResistances = [],
+  dynamicWarrantyPeriods = [],
+  dynamicMovements = [],
+  dynamicGenders = [],
+  dynamicCaseShapes = [],
+  dynamicStrapMaterials = [],
+  canEditSeo
+}) => {
   const { user } = useContext(AuthContext)
   const isBasicInfoReadOnly = mode === 'view' || (user?.role?.toLowerCase() === 'staff' && user?.canEditBasicInfo === false)
   const [formData, setFormData] = useState({
@@ -56,38 +76,91 @@ const MobileProductModal = ({ product, mode, onClose, onSave, brands = [], isOwn
   const [showCustomStrap, setShowCustomStrap] = useState(false)
   const [showCustomBrand, setShowCustomBrand] = useState(false)
   const [showCustomCategory, setShowCustomCategory] = useState(false)
+  const [showCustomGender, setShowCustomGender] = useState(false)
+  const [showCustomMovement, setShowCustomMovement] = useState(false)
+  const [showCustomCaseMaterial, setShowCustomCaseMaterial] = useState(false)
+  const [showCustomCaseShape, setShowCustomCaseShape] = useState(false)
+  const [showCustomStrapMaterial, setShowCustomStrapMaterial] = useState(false)
+  const [showCustomWaterResistance, setShowCustomWaterResistance] = useState(false)
+  const [showCustomWarranty, setShowCustomWarranty] = useState(false)
 
   const brandOptions = useMemo(() => {
-    const list = brands.filter(Boolean).filter(b => b.trim().length)
-    if (isOwner) {
-      list.push('Custom...')
-    }
+    const saved = getSavedCustomOptions('brand')
+    const list = Array.from(new Set([...brands.filter(Boolean).map(b => b.trim()).filter(Boolean), ...saved]))
+    if (!list.includes('Custom...')) list.push('Custom...')
     return list
-  }, [brands, isOwner])
+  }, [brands])
 
   const categoryOptions = useMemo(() => {
-    const list = [...CATEGORY_OPTIONS]
-    if (isOwner) {
-      list.push('Custom...')
-    }
+    const saved = getSavedCustomOptions('category')
+    const list = Array.from(new Set([...CATEGORY_OPTIONS, ...dynamicCategories, ...saved]))
+    if (!list.includes('Custom...')) list.push('Custom...')
     return list
-  }, [isOwner])
+  }, [dynamicCategories])
 
   const dialColors = useMemo(() => {
-    const list = [...DIAL_COLOR_OPTIONS, ...dynamicDialColors]
-    if (isOwner) {
-      list.push('Custom...')
-    }
+    const saved = getSavedCustomOptions('dialColor')
+    const list = Array.from(new Set([...DIAL_COLOR_OPTIONS, ...dynamicDialColors, ...saved]))
+    if (!list.includes('Custom...')) list.push('Custom...')
     return list
-  }, [dynamicDialColors, isOwner])
+  }, [dynamicDialColors])
 
   const strapColors = useMemo(() => {
-    const list = [...STRAP_COLOR_OPTIONS, ...dynamicStrapColors]
-    if (isOwner) {
-      list.push('Custom...')
-    }
+    const saved = getSavedCustomOptions('strapColor')
+    const list = Array.from(new Set([...STRAP_COLOR_OPTIONS, ...dynamicStrapColors, ...saved]))
+    if (!list.includes('Custom...')) list.push('Custom...')
     return list
-  }, [dynamicStrapColors, isOwner])
+  }, [dynamicStrapColors])
+
+  const genderOptions = useMemo(() => {
+    const saved = getSavedCustomOptions('gender')
+    const list = Array.from(new Set([...GENDER_OPTIONS, ...dynamicGenders, ...saved]))
+    if (!list.includes('Custom...')) list.push('Custom...')
+    return list
+  }, [dynamicGenders])
+
+  const movementOptions = useMemo(() => {
+    const saved = getSavedCustomOptions('movement')
+    const list = Array.from(new Set([...MOVEMENT_OPTIONS, ...dynamicMovements, ...saved]))
+    if (!list.includes('Custom...')) list.push('Custom...')
+    return list
+  }, [dynamicMovements])
+
+  const caseMaterialOptions = useMemo(() => {
+    const saved = getSavedCustomOptions('caseMaterial')
+    const list = Array.from(new Set([...CASE_MATERIAL_OPTIONS, ...dynamicCaseMaterials, ...saved]))
+    if (!list.includes('Custom...')) list.push('Custom...')
+    return list
+  }, [dynamicCaseMaterials])
+
+  const caseShapeOptions = useMemo(() => {
+    const saved = getSavedCustomOptions('caseShape')
+    const list = Array.from(new Set([...CASE_SHAPE_OPTIONS, ...dynamicCaseShapes, ...saved]))
+    if (!list.includes('Custom...')) list.push('Custom...')
+    return list
+  }, [dynamicCaseShapes])
+
+  const strapMaterialOptions = useMemo(() => {
+    const saved = getSavedCustomOptions('strapMaterial')
+    const list = Array.from(new Set([...STRAP_MATERIAL_OPTIONS, ...dynamicStrapMaterials, ...saved]))
+    if (!list.includes('Custom...')) list.push('Custom...')
+    return list
+  }, [dynamicStrapMaterials])
+
+  const waterResistanceOptions = useMemo(() => {
+    const saved = getSavedCustomOptions('waterResistance')
+    const list = Array.from(new Set([...WATER_RESISTANCE_OPTIONS, ...dynamicWaterResistances, ...saved]))
+      .filter(item => item && item.trim().toLowerCase() !== '30m' && item.trim().toLowerCase() !== '30 m')
+    if (!list.includes('Custom...')) list.push('Custom...')
+    return list
+  }, [dynamicWaterResistances])
+
+  const warrantyOptions = useMemo(() => {
+    const saved = getSavedCustomOptions('warrantyPeriod')
+    const list = Array.from(new Set([...WARRANTY_OPTIONS, ...dynamicWarrantyPeriods, ...saved]))
+    if (!list.includes('Custom...')) list.push('Custom...')
+    return list
+  }, [dynamicWarrantyPeriods])
   const imagesOrderRef = useRef(null)
 
   const createMutation = useCreateProduct()
@@ -196,6 +269,62 @@ const MobileProductModal = ({ product, mode, onClose, onSave, brands = [], isOwn
         setShowCustomStrap(false)
         setFormData((prev) => ({ ...prev, strapColor: value }))
       }
+    } else if (name === 'gender') {
+      if (value === 'Custom...') {
+        setShowCustomGender(true)
+        setFormData((prev) => ({ ...prev, gender: '' }))
+      } else {
+        setShowCustomGender(false)
+        setFormData((prev) => ({ ...prev, gender: value }))
+      }
+    } else if (name === 'movement') {
+      if (value === 'Custom...') {
+        setShowCustomMovement(true)
+        setFormData((prev) => ({ ...prev, movement: '' }))
+      } else {
+        setShowCustomMovement(false)
+        setFormData((prev) => ({ ...prev, movement: value }))
+      }
+    } else if (name === 'caseMaterial') {
+      if (value === 'Custom...') {
+        setShowCustomCaseMaterial(true)
+        setFormData((prev) => ({ ...prev, caseMaterial: '' }))
+      } else {
+        setShowCustomCaseMaterial(false)
+        setFormData((prev) => ({ ...prev, caseMaterial: value }))
+      }
+    } else if (name === 'caseShape') {
+      if (value === 'Custom...') {
+        setShowCustomCaseShape(true)
+        setFormData((prev) => ({ ...prev, caseShape: '' }))
+      } else {
+        setShowCustomCaseShape(false)
+        setFormData((prev) => ({ ...prev, caseShape: value }))
+      }
+    } else if (name === 'strapMaterial') {
+      if (value === 'Custom...') {
+        setShowCustomStrapMaterial(true)
+        setFormData((prev) => ({ ...prev, strapMaterial: '' }))
+      } else {
+        setShowCustomStrapMaterial(false)
+        setFormData((prev) => ({ ...prev, strapMaterial: value }))
+      }
+    } else if (name === 'waterResistance') {
+      if (value === 'Custom...') {
+        setShowCustomWaterResistance(true)
+        setFormData((prev) => ({ ...prev, waterResistance: '' }))
+      } else {
+        setShowCustomWaterResistance(false)
+        setFormData((prev) => ({ ...prev, waterResistance: value }))
+      }
+    } else if (name === 'warrantyPeriod') {
+      if (value === 'Custom...') {
+        setShowCustomWarranty(true)
+        setFormData((prev) => ({ ...prev, warrantyPeriod: '' }))
+      } else {
+        setShowCustomWarranty(false)
+        setFormData((prev) => ({ ...prev, warrantyPeriod: value }))
+      }
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -244,6 +373,19 @@ const MobileProductModal = ({ product, mode, onClose, onSave, brands = [], isOwn
     }
 
     setError('')
+
+    // Save custom options to localStorage so they immediately show up in dropdown lists
+    saveCustomOption('brand', formData.brand)
+    saveCustomOption('category', formData.category)
+    saveCustomOption('dialColor', formData.dialColor)
+    saveCustomOption('strapColor', formData.strapColor)
+    saveCustomOption('gender', formData.gender)
+    saveCustomOption('movement', formData.movement)
+    saveCustomOption('caseMaterial', formData.caseMaterial)
+    saveCustomOption('caseShape', formData.caseShape)
+    saveCustomOption('strapMaterial', formData.strapMaterial)
+    saveCustomOption('waterResistance', formData.waterResistance)
+    saveCustomOption('warrantyPeriod', formData.warrantyPeriod)
 
     try {
       if (mode === 'create') {
@@ -543,20 +685,35 @@ const MobileProductModal = ({ product, mode, onClose, onSave, brands = [], isOwn
                   {isBasicInfoReadOnly ? (
                     <div className="mobile-view-value">{displayProduct?.caseMaterial || '-'}</div>
                   ) : (
-                    <select
-                      name="caseMaterial"
-                      value={formData.caseMaterial}
-                      onChange={handleChange}
-                      disabled={isBasicInfoReadOnly}
-                      className="mobile-form-input"
-                    >
-                      <option value="">Select Case Material</option>
-                      {CASE_MATERIAL_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                    <>
+                      <select
+                        name="caseMaterial"
+                        value={showCustomCaseMaterial ? 'Custom...' : formData.caseMaterial}
+                        onChange={handleChange}
+                        disabled={isBasicInfoReadOnly}
+                        className="mobile-form-input"
+                      >
+                        <option value="">Select Case Material</option>
+                        {caseMaterialOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      {showCustomCaseMaterial && (
+                        <input
+                          type="text"
+                          placeholder="Enter custom case material..."
+                          value={formData.caseMaterial}
+                          onChange={(e) => {
+                            setIsDirty(true)
+                            setFormData(prev => ({ ...prev, caseMaterial: e.target.value }))
+                          }}
+                          className="mobile-form-input"
+                          style={{ marginTop: '8px' }}
+                        />
+                      )}
+                    </>
                   )}
                 </div>
                 <div className="mobile-form-group">
@@ -600,20 +757,35 @@ const MobileProductModal = ({ product, mode, onClose, onSave, brands = [], isOwn
                   {isBasicInfoReadOnly ? (
                     <div className="mobile-view-value">{displayProduct?.waterResistance || '-'}</div>
                   ) : (
-                    <select
-                      name="waterResistance"
-                      value={formData.waterResistance}
-                      onChange={handleChange}
-                      disabled={isBasicInfoReadOnly}
-                      className="mobile-form-input"
-                    >
-                      <option value="">Select Water Resistance</option>
-                      {WATER_RESISTANCE_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                    <>
+                      <select
+                        name="waterResistance"
+                        value={showCustomWaterResistance ? 'Custom...' : formData.waterResistance}
+                        onChange={handleChange}
+                        disabled={isBasicInfoReadOnly}
+                        className="mobile-form-input"
+                      >
+                        <option value="">Select Water Resistance</option>
+                        {waterResistanceOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      {showCustomWaterResistance && (
+                        <input
+                          type="text"
+                          placeholder="Enter custom water resistance..."
+                          value={formData.waterResistance}
+                          onChange={(e) => {
+                            setIsDirty(true)
+                            setFormData(prev => ({ ...prev, waterResistance: e.target.value }))
+                          }}
+                          className="mobile-form-input"
+                          style={{ marginTop: '8px' }}
+                        />
+                      )}
+                    </>
                   )}
                 </div>
                 <div className="mobile-form-group">
@@ -621,25 +793,35 @@ const MobileProductModal = ({ product, mode, onClose, onSave, brands = [], isOwn
                   {isBasicInfoReadOnly ? (
                     <div className="mobile-view-value">{displayProduct?.warrantyPeriod || '-'}</div>
                   ) : (
-                    <select
-                      name="warrantyPeriod"
-                      value={formData.warrantyPeriod}
-                      onChange={handleChange}
-                      disabled={isBasicInfoReadOnly}
-                      className="mobile-form-input"
-                    >
-                      <option value="">Select Warranty Period</option>
-                      {WARRANTY_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                      {formData.warrantyPeriod && !WARRANTY_OPTIONS.includes(formData.warrantyPeriod) && (
-                        <option value={formData.warrantyPeriod}>
-                          {formData.warrantyPeriod}
-                        </option>
+                    <>
+                      <select
+                        name="warrantyPeriod"
+                        value={showCustomWarranty ? 'Custom...' : formData.warrantyPeriod}
+                        onChange={handleChange}
+                        disabled={isBasicInfoReadOnly}
+                        className="mobile-form-input"
+                      >
+                        <option value="">Select Warranty Period</option>
+                        {warrantyOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      {showCustomWarranty && (
+                        <input
+                          type="text"
+                          placeholder="Enter custom warranty period..."
+                          value={formData.warrantyPeriod}
+                          onChange={(e) => {
+                            setIsDirty(true)
+                            setFormData(prev => ({ ...prev, warrantyPeriod: e.target.value }))
+                          }}
+                          className="mobile-form-input"
+                          style={{ marginTop: '8px' }}
+                        />
                       )}
-                    </select>
+                    </>
                   )}
                 </div>
                 <div className="mobile-form-group">
@@ -647,20 +829,35 @@ const MobileProductModal = ({ product, mode, onClose, onSave, brands = [], isOwn
                   {isBasicInfoReadOnly ? (
                     <div className="mobile-view-value">{displayProduct?.movement || '-'}</div>
                   ) : (
-                    <select
-                      name="movement"
-                      value={formData.movement}
-                      onChange={handleChange}
-                      disabled={isBasicInfoReadOnly}
-                      className="mobile-form-input"
-                    >
-                      <option value="">Select Movement</option>
-                      {MOVEMENT_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                    <>
+                      <select
+                        name="movement"
+                        value={showCustomMovement ? 'Custom...' : formData.movement}
+                        onChange={handleChange}
+                        disabled={isBasicInfoReadOnly}
+                        className="mobile-form-input"
+                      >
+                        <option value="">Select Movement</option>
+                        {movementOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      {showCustomMovement && (
+                        <input
+                          type="text"
+                          placeholder="Enter custom movement..."
+                          value={formData.movement}
+                          onChange={(e) => {
+                            setIsDirty(true)
+                            setFormData(prev => ({ ...prev, movement: e.target.value }))
+                          }}
+                          className="mobile-form-input"
+                          style={{ marginTop: '8px' }}
+                        />
+                      )}
+                    </>
                   )}
                 </div>
                 <div className="mobile-form-group">
@@ -668,20 +865,35 @@ const MobileProductModal = ({ product, mode, onClose, onSave, brands = [], isOwn
                   {isBasicInfoReadOnly ? (
                     <div className="mobile-view-value">{displayProduct?.gender || '-'}</div>
                   ) : (
-                    <select
-                      name="gender"
-                      value={formData.gender}
-                      onChange={handleChange}
-                      disabled={isBasicInfoReadOnly}
-                      className="mobile-form-input"
-                    >
-                      <option value="">Select Gender</option>
-                      {GENDER_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                    <>
+                      <select
+                        name="gender"
+                        value={showCustomGender ? 'Custom...' : formData.gender}
+                        onChange={handleChange}
+                        disabled={isBasicInfoReadOnly}
+                        className="mobile-form-input"
+                      >
+                        <option value="">Select Gender</option>
+                        {genderOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      {showCustomGender && (
+                        <input
+                          type="text"
+                          placeholder="Enter custom gender..."
+                          value={formData.gender}
+                          onChange={(e) => {
+                            setIsDirty(true)
+                            setFormData(prev => ({ ...prev, gender: e.target.value }))
+                          }}
+                          className="mobile-form-input"
+                          style={{ marginTop: '8px' }}
+                        />
+                      )}
+                    </>
                   )}
                 </div>
                 <div className="mobile-form-group">
@@ -725,20 +937,35 @@ const MobileProductModal = ({ product, mode, onClose, onSave, brands = [], isOwn
                   {isBasicInfoReadOnly ? (
                     <div className="mobile-view-value">{displayProduct?.caseShape || '-'}</div>
                   ) : (
-                    <select
-                      name="caseShape"
-                      value={formData.caseShape}
-                      onChange={handleChange}
-                      disabled={isBasicInfoReadOnly}
-                      className="mobile-form-input"
-                    >
-                      <option value="">Select Case Shape</option>
-                      {CASE_SHAPE_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                    <>
+                      <select
+                        name="caseShape"
+                        value={showCustomCaseShape ? 'Custom...' : formData.caseShape}
+                        onChange={handleChange}
+                        disabled={isBasicInfoReadOnly}
+                        className="mobile-form-input"
+                      >
+                        <option value="">Select Case Shape</option>
+                        {caseShapeOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      {showCustomCaseShape && (
+                        <input
+                          type="text"
+                          placeholder="Enter custom case shape..."
+                          value={formData.caseShape}
+                          onChange={(e) => {
+                            setIsDirty(true)
+                            setFormData(prev => ({ ...prev, caseShape: e.target.value }))
+                          }}
+                          className="mobile-form-input"
+                          style={{ marginTop: '8px' }}
+                        />
+                      )}
+                    </>
                   )}
                 </div>
                 <div className="mobile-form-group">
@@ -761,20 +988,35 @@ const MobileProductModal = ({ product, mode, onClose, onSave, brands = [], isOwn
                   {isBasicInfoReadOnly ? (
                     <div className="mobile-view-value">{formData.strapMaterial || '-'}</div>
                   ) : (
-                    <select
-                      name="strapMaterial"
-                      value={formData.strapMaterial}
-                      onChange={handleChange}
-                      disabled={isBasicInfoReadOnly}
-                      className="mobile-form-input"
-                    >
-                      <option value="">Select Strap Material</option>
-                      {STRAP_MATERIAL_OPTIONS.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                    <>
+                      <select
+                        name="strapMaterial"
+                        value={showCustomStrapMaterial ? 'Custom...' : formData.strapMaterial}
+                        onChange={handleChange}
+                        disabled={isBasicInfoReadOnly}
+                        className="mobile-form-input"
+                      >
+                        <option value="">Select Strap Material</option>
+                        {strapMaterialOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      {showCustomStrapMaterial && (
+                        <input
+                          type="text"
+                          placeholder="Enter custom strap material..."
+                          value={formData.strapMaterial}
+                          onChange={(e) => {
+                            setIsDirty(true)
+                            setFormData(prev => ({ ...prev, strapMaterial: e.target.value }))
+                          }}
+                          className="mobile-form-input"
+                          style={{ marginTop: '8px' }}
+                        />
+                      )}
+                    </>
                   )}
                 </div>
               </div>

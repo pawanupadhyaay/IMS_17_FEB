@@ -17,7 +17,18 @@ import ExportModal from '../components/ExportModal'
 import ImportModal from '../components/ImportModal'
 import BrandSummaryBar from '../components/BrandSummaryBar'
 import PaginationBar from '../components/PaginationBar'
-import { DIAL_COLOR_OPTIONS, STRAP_COLOR_OPTIONS } from '../constants/productOptions'
+import {
+  CATEGORY_OPTIONS,
+  CASE_MATERIAL_OPTIONS,
+  DIAL_COLOR_OPTIONS,
+  WATER_RESISTANCE_OPTIONS,
+  WARRANTY_OPTIONS,
+  MOVEMENT_OPTIONS,
+  GENDER_OPTIONS,
+  STRAP_COLOR_OPTIONS,
+  CASE_SHAPE_OPTIONS,
+  STRAP_MATERIAL_OPTIONS,
+} from '../constants/productOptions'
 // Mobile components
 import MobileHeader from '../components/mobile/MobileHeader'
 import MobileStatsBar from '../components/mobile/MobileStatsBar'
@@ -160,34 +171,31 @@ const Dashboard = () => {
   const isOwner = user?.role?.toLowerCase() === 'owner'
   const canEditSeo = isOwner || user?.canEditSeo !== false
 
-  // Extract unique dialColors and strapColors dynamically from all products in the database
-  const dynamicDialColors = useMemo(() => {
-    const defaultSet = new Set(DIAL_COLOR_OPTIONS.map(c => c.toLowerCase()))
-    const uniqueColors = new Set()
+  // Helper to extract unique custom options dynamically from all products in the database
+  const getDynamicOptions = (field, defaultOptions) => {
+    const defaultSet = new Set(defaultOptions.map(c => c.toLowerCase()))
+    const uniqueValues = new Set()
     allProducts.forEach(p => {
-      if (p.dialColor && p.dialColor.trim()) {
-        const trimmed = p.dialColor.trim()
+      if (p[field] && typeof p[field] === 'string' && p[field].trim()) {
+        const trimmed = p[field].trim()
         if (!defaultSet.has(trimmed.toLowerCase())) {
-          uniqueColors.add(trimmed)
+          uniqueValues.add(trimmed)
         }
       }
     })
-    return Array.from(uniqueColors).sort((a, b) => a.localeCompare(b))
-  }, [allProducts])
+    return Array.from(uniqueValues).sort((a, b) => a.localeCompare(b))
+  }
 
-  const dynamicStrapColors = useMemo(() => {
-    const defaultSet = new Set(STRAP_COLOR_OPTIONS.map(c => c.toLowerCase()))
-    const uniqueColors = new Set()
-    allProducts.forEach(p => {
-      if (p.strapColor && p.strapColor.trim()) {
-        const trimmed = p.strapColor.trim()
-        if (!defaultSet.has(trimmed.toLowerCase())) {
-          uniqueColors.add(trimmed)
-        }
-      }
-    })
-    return Array.from(uniqueColors).sort((a, b) => a.localeCompare(b))
-  }, [allProducts])
+  const dynamicCategories = useMemo(() => getDynamicOptions('category', CATEGORY_OPTIONS), [allProducts])
+  const dynamicDialColors = useMemo(() => getDynamicOptions('dialColor', DIAL_COLOR_OPTIONS), [allProducts])
+  const dynamicStrapColors = useMemo(() => getDynamicOptions('strapColor', STRAP_COLOR_OPTIONS), [allProducts])
+  const dynamicCaseMaterials = useMemo(() => getDynamicOptions('caseMaterial', CASE_MATERIAL_OPTIONS), [allProducts])
+  const dynamicWaterResistances = useMemo(() => getDynamicOptions('waterResistance', WATER_RESISTANCE_OPTIONS), [allProducts])
+  const dynamicWarrantyPeriods = useMemo(() => getDynamicOptions('warrantyPeriod', WARRANTY_OPTIONS), [allProducts])
+  const dynamicMovements = useMemo(() => getDynamicOptions('movement', MOVEMENT_OPTIONS), [allProducts])
+  const dynamicGenders = useMemo(() => getDynamicOptions('gender', GENDER_OPTIONS), [allProducts])
+  const dynamicCaseShapes = useMemo(() => getDynamicOptions('caseShape', CASE_SHAPE_OPTIONS), [allProducts])
+  const dynamicStrapMaterials = useMemo(() => getDynamicOptions('strapMaterial', STRAP_MATERIAL_OPTIONS), [allProducts])
 
   const handleViewProduct = (product) => {
     setSelectedProduct(product)
@@ -451,6 +459,14 @@ const Dashboard = () => {
             isOwner={isOwner}
             dynamicDialColors={dynamicDialColors}
             dynamicStrapColors={dynamicStrapColors}
+            dynamicCategories={dynamicCategories}
+            dynamicCaseMaterials={dynamicCaseMaterials}
+            dynamicWaterResistances={dynamicWaterResistances}
+            dynamicWarrantyPeriods={dynamicWarrantyPeriods}
+            dynamicMovements={dynamicMovements}
+            dynamicGenders={dynamicGenders}
+            dynamicCaseShapes={dynamicCaseShapes}
+            dynamicStrapMaterials={dynamicStrapMaterials}
             canEditSeo={canEditSeo}
           />
         )}
@@ -756,6 +772,14 @@ const Dashboard = () => {
           isOwner={isOwner}
           dynamicDialColors={dynamicDialColors}
           dynamicStrapColors={dynamicStrapColors}
+          dynamicCategories={dynamicCategories}
+          dynamicCaseMaterials={dynamicCaseMaterials}
+          dynamicWaterResistances={dynamicWaterResistances}
+          dynamicWarrantyPeriods={dynamicWarrantyPeriods}
+          dynamicMovements={dynamicMovements}
+          dynamicGenders={dynamicGenders}
+          dynamicCaseShapes={dynamicCaseShapes}
+          dynamicStrapMaterials={dynamicStrapMaterials}
           canEditSeo={canEditSeo}
         />
       )}

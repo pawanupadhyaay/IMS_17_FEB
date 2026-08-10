@@ -188,6 +188,34 @@ export const STRAP_MATERIAL_OPTIONS = [
   'Red PVD Coating',
 ]
 
+export const getSavedCustomOptions = (field) => {
+  try {
+    const saved = localStorage.getItem(`ims_custom_${field}`)
+    const parsed = saved ? JSON.parse(saved) : []
+    return parsed.filter(item => {
+      if (!item || typeof item !== 'string') return false
+      const lower = item.trim().toLowerCase()
+      return lower !== '30m' && lower !== '30 m'
+    })
+  } catch (e) {
+    return []
+  }
+}
+
+export const saveCustomOption = (field, value) => {
+  if (!value || typeof value !== 'string' || !value.trim() || value === 'Custom...') return
+  const trimmed = value.trim()
+  const lower = trimmed.toLowerCase()
+  if (lower === '30m' || lower === '30 m') return
+  try {
+    const existing = getSavedCustomOptions(field)
+    if (!existing.some(item => item.toLowerCase() === lower)) {
+      const updated = [...existing, trimmed]
+      localStorage.setItem(`ims_custom_${field}`, JSON.stringify(updated))
+    }
+  } catch (e) {}
+}
+
 
 
 
