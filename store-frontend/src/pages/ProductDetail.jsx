@@ -298,13 +298,16 @@ export default function ProductDetail() {
       // 4. Robots Tag
       updateMetaTag('name', 'robots', 'index, follow');
 
+      const cleanProductUrl = typeof window !== 'undefined'
+        ? `${window.location.origin}/products/${product.slug || slug}`
+        : `https://samaywatch.com/products/${product.slug || slug}`;
+      const imageSource = product.seoImage || product.images?.[0] || 'https://samaywatch-assets.sgp1.cdn.digitaloceanspaces.com/samay_logo.png';
+
       // 5. Dynamic OpenGraph Social Sharing Metadata
       updateMetaTag('property', 'og:title', product.seoTitle || product.title || 'Samay Watch');
       updateMetaTag('property', 'og:description', (product.seoDescription || product.description || 'Discover our premium watch collection.').slice(0, 160));
       updateMetaTag('property', 'og:type', 'og:product');
-      updateMetaTag('property', 'og:url', window.location.href);
-
-      const imageSource = product.seoImage || product.images?.[0] || 'https://i.ibb.co/2XHCWRL/samay-logo.png';
+      updateMetaTag('property', 'og:url', cleanProductUrl);
       updateMetaTag('property', 'og:image', imageSource);
 
       // 6. Dynamic OpenGraph Product Properties
@@ -318,14 +321,14 @@ export default function ProductDetail() {
       updateMetaTag('name', 'twitter:description', (product.seoDescription || product.description || 'Discover our premium watch collection.').slice(0, 160));
       updateMetaTag('name', 'twitter:image', imageSource);
 
-      // 8. Canonical Link Tag
+      // 8. Canonical Link Tag (Clean master URL)
       let canonicalLink = document.querySelector('link[rel="canonical"]');
       if (!canonicalLink) {
         canonicalLink = document.createElement('link');
         canonicalLink.setAttribute('rel', 'canonical');
         document.head.appendChild(canonicalLink);
       }
-      canonicalLink.setAttribute('href', window.location.href);
+      canonicalLink.setAttribute('href', cleanProductUrl);
 
       // 9. JSON-LD Google Product Schema (Structured Data)
       let jsonLdScript = document.getElementById('jsonld-product-schema');

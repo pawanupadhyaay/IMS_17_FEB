@@ -81,6 +81,11 @@ app.use("/api/blogs", require("./routes/blogRoutes"));
 app.use("/api/analytics", require("./routes/analyticsRoutes"));
 app.use("/api/notifications", require("./routes/notificationRoutes"));
 
+// Dynamic XML Sitemap for Search Engine Crawlers
+const sitemapController = require("./controllers/sitemapController");
+app.get("/sitemap.xml", sitemapController.getSitemapXml);
+app.get("/api/sitemap.xml", sitemapController.getSitemapXml);
+
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "Server is running" });

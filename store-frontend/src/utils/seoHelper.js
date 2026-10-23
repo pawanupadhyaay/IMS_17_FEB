@@ -38,6 +38,9 @@ export function updatePageSEO({ title, description, keywords, ogImage, ogType = 
     updateMetaTag('name', 'keywords', keywords);
   }
 
+  const cleanUrl = canonicalUrl || (typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : '');
+  const fallbackImage = ogImage || 'https://samaywatch-assets.sgp1.cdn.digitaloceanspaces.com/samay_logo.png';
+
   // 4. Robots indexing (default index and follow for optimal crawl visibility)
   updateMetaTag('name', 'robots', 'index, follow');
 
@@ -45,18 +48,14 @@ export function updatePageSEO({ title, description, keywords, ogImage, ogType = 
   if (title) updateMetaTag('property', 'og:title', title);
   if (description) updateMetaTag('property', 'og:description', description.slice(0, 160));
   updateMetaTag('property', 'og:type', ogType);
-  updateMetaTag('property', 'og:url', canonicalUrl || window.location.href);
-  if (ogImage) {
-    updateMetaTag('property', 'og:image', ogImage);
-  }
+  updateMetaTag('property', 'og:url', cleanUrl);
+  updateMetaTag('property', 'og:image', fallbackImage);
 
   // 6. Twitter Card Tags
   updateMetaTag('name', 'twitter:card', 'summary_large_image');
   if (title) updateMetaTag('name', 'twitter:title', title);
   if (description) updateMetaTag('name', 'twitter:description', description.slice(0, 160));
-  if (ogImage) {
-    updateMetaTag('name', 'twitter:image', ogImage);
-  }
+  updateMetaTag('name', 'twitter:image', fallbackImage);
 
   // 7. Canonical Link Tag
   let canonicalLink = document.querySelector('link[rel="canonical"]');
@@ -65,5 +64,5 @@ export function updatePageSEO({ title, description, keywords, ogImage, ogType = 
     canonicalLink.setAttribute('rel', 'canonical');
     document.head.appendChild(canonicalLink);
   }
-  canonicalLink.setAttribute('href', canonicalUrl || window.location.href);
+  canonicalLink.setAttribute('href', cleanUrl);
 }

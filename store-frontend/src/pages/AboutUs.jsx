@@ -276,8 +276,20 @@ export default function AboutUs() {
         <div className="mx-auto max-w-5xl rounded-2xl border border-neutral-200 bg-neutral-900 p-8 text-white shadow-xl sm:p-12 md:rounded-3xl md:p-20">
           <div className="grid gap-10 md:grid-cols-[1fr_2fr] md:items-center md:gap-12">
             <div className="text-center md:text-left">
-              <div className="mx-auto mb-6 flex h-36 w-36 overflow-hidden rounded-full border-2 border-neutral-600 bg-neutral-800 md:mx-0 md:h-40 md:w-40">
-                <div className="flex h-full w-full items-center justify-center text-neutral-500">
+              <div className="mx-auto mb-6 flex h-36 w-36 overflow-hidden rounded-full border-2 border-neutral-600 bg-neutral-800 shadow-lg md:mx-0 md:h-40 md:w-40">
+                <img
+                  src="https://samaywatch-assets.sgp1.cdn.digitaloceanspaces.com/Rajesh_Sir_Samay.jpeg"
+                  alt="Rajesh Kathpal - Founder &amp; CEO, Samay Watch"
+                  className="h-full w-full object-cover object-[center_15%]"
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    if (e.currentTarget.nextElementSibling) {
+                      e.currentTarget.nextElementSibling.style.display = 'flex';
+                    }
+                  }}
+                />
+                <div className="hidden h-full w-full items-center justify-center text-neutral-500">
                   <Users className="size-14 md:size-16" strokeWidth={1.25} />
                 </div>
               </div>

@@ -88,6 +88,7 @@ function ProductCard({ product }) {
             <img
               src={getSquareImage(imageUrl, 400)}
               alt={product.title}
+              referrerPolicy="no-referrer"
               onLoad={() => setIsLoaded(true)}
               onError={(e) => {
                 setIsLoaded(true);
@@ -111,6 +112,7 @@ function ProductCard({ product }) {
                 src={getSquareImage(secondUrl, 400)}
                 alt=""
                 aria-hidden
+                referrerPolicy="no-referrer"
                 className="absolute inset-0 h-full w-full object-contain p-6 sm:p-8 opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100 group-active:opacity-100 group-focus-within:opacity-100 mix-blend-multiply"
                 onError={(e) => {
                   e.currentTarget.style.opacity = '0'

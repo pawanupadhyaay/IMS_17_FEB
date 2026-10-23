@@ -93,6 +93,7 @@ function ProductCard({ product }) {
           <img
             src={getSquareImage(imageUrl, 400)}
             alt={product.title}
+            referrerPolicy="no-referrer"
             className={cn(
               "h-full w-full object-contain mix-blend-multiply transition-transform duration-700 ease-in-out",
               isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95",

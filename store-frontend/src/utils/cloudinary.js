@@ -50,7 +50,9 @@ export const getSquareImage = (imageUrl, dimension = 800) => {
     'ecom.longines.com',
     'swarovski.com', // Added preventive bypasses
     'casio.com',
-    'digitaloceanspaces.com'
+    'digitaloceanspaces.com',
+    'helioswatchstore.com',
+    'titan.co.in'
   ];
   const isBlocked = BLOCKED_DOMAINS.some(domain => imageUrl.includes(domain));
   if (isBlocked) return imageUrl;

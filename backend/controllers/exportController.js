@@ -138,7 +138,7 @@ const exportToCSV = async (req, res) => {
         rowCount++;
       } else if (exportType === "website") {
         const images = Array.isArray(product.images) ? product.images.filter(Boolean) : [];
-        
+
         if (images.length === 0) {
           const row = [
             product.title || "",
@@ -217,7 +217,7 @@ const exportToCSV = async (req, res) => {
         }
       } else {
         const images = Array.isArray(product.images) ? product.images.filter(Boolean) : [];
-        
+
         if (images.length === 0) {
           const row = [
             product.title || "",

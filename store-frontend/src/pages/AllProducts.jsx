@@ -65,6 +65,7 @@ function ProductCard({ product, brandMap = {} }) {
           <img
             src={getSquareImage(imageUrl, 400)}
             alt={product.title}
+            referrerPolicy="no-referrer"
             onLoad={() => setIsLoaded(true)}
             onError={(e) => {
               setIsLoaded(true);
