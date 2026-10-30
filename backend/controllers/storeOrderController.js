@@ -462,25 +462,16 @@ exports.createRazorpayOrder = async (req, res) => {
         }
       }
       couponUsed = activeCoupon.code;
-    } else if (couponCode && couponCode.toUpperCase() === 'TEST1') {
-      discountAmount = totalAmount;
-      couponUsed = 'TEST1';
     } else if (couponCode) {
       return res.status(400).json({ success: false, message: "Invalid or inactive coupon code" });
     }
 
-    // Shipping Logic (Free shipping above ₹50,000, but ₹1 for exactly ₹50,000 for testing)
-    let shippingAmount = totalAmount === 50000 ? 1 : (totalAmount > 50000 ? 0 : 99);
+    // Shipping Logic (Free shipping above ₹50,000)
+    let shippingAmount = totalAmount > 50000 ? 0 : 99;
     if (shippingOverride) {
       shippingAmount = 0;
     }
     finalAmount = (totalAmount - discountAmount) + shippingAmount;
-
-    // --- TEST MODE OVERRIDE ---
-    if (couponCode && couponCode.toUpperCase() === 'TEST1') {
-        shippingAmount = 0;
-        finalAmount = 1;
-    }
 
     if (finalAmount <= 0) {
       finalAmount = 1;
@@ -864,19 +855,6 @@ exports.validateCoupon = async (req, res) => {
       return res.status(400).json({ success: false, message: "Coupon code and order amount are required" });
     }
 
-    // --- TEST MODE OVERRIDE ---
-    if (code.toUpperCase() === 'TEST1') {
-      return res.status(200).json({
-        success: true,
-        message: "Test Mode Enabled: Checkout for ₹1",
-        data: {
-          code: 'TEST1',
-          discountPercentage: 100,
-          minOrderAmount: 0
-        }
-      });
-    }
-
     const coupon = await Coupon.findOne({ code: code.toUpperCase() });
 
     if (!coupon) {
@@ -1193,6 +1171,19 @@ exports.checkServiceability = async (req, res) => {
 // @access  Public
 exports.handleShiprocketWebhook = async (req, res) => {
   try {
+    // Shiprocket sends the token set in its webhook settings as the x-api-key header
+    const expectedToken = process.env.SHIPROCKET_WEBHOOK_TOKEN;
+    if (expectedToken) {
+      const receivedToken = String(req.headers["x-api-key"] || "");
+      const a = Buffer.from(receivedToken);
+      const b = Buffer.from(expectedToken);
+      if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+        return res.status(401).json({ success: false, message: "Invalid webhook token" });
+      }
+    } else {
+      console.warn("⚠️ SHIPROCKET_WEBHOOK_TOKEN is not set; accepting webhook without verification.");
+    }
+
     const payload = req.body;
     console.log("📥 Received Shiprocket Webhook:", JSON.stringify(payload));
 

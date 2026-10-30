@@ -36,17 +36,26 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "https://inventory.samaywatch.in",
-].filter(Boolean)
+  "https://test.samaywatch.in",
+  "https://samaywatch.in",
+  "https://www.samaywatch.in",
+  "https://samaywatch.com",
+  "https://www.samaywatch.com",
+].map(url => url.replace(/\/+$/, "")).filter(Boolean)
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (server-to-server calls, webhooks, curl)
     if (!origin) return callback(null, true)
-    
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+
+    // Any https subdomain of our own domains is allowed too (www, test, inventory, ...)
+    const isOwnDomain = /^https:\/\/([a-z0-9-]+\.)*samaywatch\.(in|com)$/i.test(origin)
+
+    if (allowedOrigins.includes(origin) || isOwnDomain) {
       callback(null, true)
     } else {
-      callback(null, true) // Allow all origins for now (can be restricted later)
+      console.warn(`CORS blocked origin: ${origin}`)
+      callback(null, false)
     }
   },
   credentials: true,
@@ -90,11 +99,6 @@ app.get("/api/sitemap.xml", sitemapController.getSitemapXml);
 app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "Server is running" });
 });
-
-// Test database connection (for debugging)
-const testController = require("./controllers/testController");
-app.get("/api/test/db", testController.testDatabase);
-app.get("/api/test/databases", testController.listDatabases);
 
 // Error handler
 app.use(errorHandler);

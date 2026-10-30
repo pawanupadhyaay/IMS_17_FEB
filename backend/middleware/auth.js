@@ -61,4 +61,8 @@ const authorize = (...roles) => {
   };
 };
 
-module.exports = { protect, optionalAuth, authorize };
+// IMS panel users (website customers have role "user" and are kept out).
+// "head" is a legacy role still present on one live account.
+const imsOnly = authorize("owner", "admin", "staff", "head");
+
+module.exports = { protect, optionalAuth, authorize, imsOnly };

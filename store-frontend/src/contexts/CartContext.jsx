@@ -52,12 +52,8 @@ export function CartProvider({ children }) {
     return appliedCoupon ? cartTotal * (appliedCoupon.discountPercentage / 100) : 0
   }, [cartTotal, appliedCoupon])
 
-  const shippingValue = (cartTotal === 50000) ? 1 : ((cartTotal > 50000 || cartItems.length === 0 || appliedCoupon?.code === 'TEST1' || appliedCoupon?.isFreeShipping) ? 0 : 99)
-  let grandTotal = Math.max(0, cartTotal - discountAmount + shippingValue)
-  
-  if (appliedCoupon?.code === 'TEST1') {
-    grandTotal = 1
-  }
+  const shippingValue = (cartTotal > 50000 || cartItems.length === 0 || appliedCoupon?.isFreeShipping) ? 0 : 99
+  const grandTotal = Math.max(0, cartTotal - discountAmount + shippingValue)
 
   const toggleCart = () => setIsCartOpen(prev => !prev)
 

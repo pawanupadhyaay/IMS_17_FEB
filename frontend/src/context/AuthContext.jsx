@@ -10,6 +10,11 @@ const getInitialToken = () => {
   return localStorage.getItem('token') || sessionStorage.getItem('token')
 }
 
+// Website customers (role "user") share the same login API but must not enter the IMS
+const IMS_ROLES = ['owner', 'admin', 'staff', 'head']
+const hasImsAccess = (user) => IMS_ROLES.includes(String(user?.role || '').toLowerCase())
+const NO_ACCESS_MESSAGE = 'This account does not have access to the IMS. Please contact the store owner.'
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -28,6 +33,7 @@ export const AuthProvider = ({ children }) => {
   const fetchUser = async () => {
     try {
       const response = await api.get('/auth/me')
+      if (!hasImsAccess(response.data.user)) throw new Error(NO_ACCESS_MESSAGE)
       setUser(response.data.user)
     } catch (error) {
       // Clear any stale tokens from both storage locations
@@ -46,6 +52,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.post('/auth/login', { email, password })
       const { token: newToken, user: userData } = response.data
+
+      if (!hasImsAccess(userData)) {
+        return { success: false, message: NO_ACCESS_MESSAGE }
+      }
 
       queryClient.clear()
 
@@ -79,6 +89,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await api.post('/auth/register', { name, email, password })
       const { token: newToken, user: userData } = response.data
+      if (!hasImsAccess(userData)) {
+        return { success: false, message: NO_ACCESS_MESSAGE }
+      }
       localStorage.setItem('token', newToken)
       setToken(newToken)
       api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`

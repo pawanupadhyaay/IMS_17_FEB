@@ -1,8 +1,9 @@
+require("dotenv").config();
 const mongoose = require("mongoose");
 
 const checkOmrieDb = async () => {
   try {
-    const omrieUri = "mongodb+srv://omrie:Nay%23N2.u%40NGw3_y@cluster0.x28tqcf.mongodb.net/IMS?retryWrites=true&w=majority";
+    const omrieUri = process.env.MONGODB_URI;
     await mongoose.connect(omrieUri);
     const db = mongoose.connection.client.db("IMS");
     

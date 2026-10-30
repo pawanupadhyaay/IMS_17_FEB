@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const { protect } = require("../middleware/auth");
+const { protect, imsOnly } = require("../middleware/auth");
 const { downloadSampleCSV, importCSV } = require("../controllers/importController");
 
 // Multer memory storage configuration for streaming file buffers safely
@@ -14,6 +14,6 @@ const upload = multer({
 router.get("/sample", downloadSampleCSV);
 
 // Route to process CSV Import - protected and processed via Multer memory parser
-router.post("/csv", protect, upload.single("file"), importCSV);
+router.post("/csv", protect, imsOnly, upload.single("file"), importCSV);
 
 module.exports = router;

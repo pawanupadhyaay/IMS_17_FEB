@@ -11,10 +11,10 @@ const {
   bulkPatchProducts,
   bulkDeleteProducts,
 } = require("../controllers/productController");
-const { protect } = require("../middleware/auth");
+const { protect, imsOnly } = require("../middleware/auth");
 
 // All routes are protected
-router.use(protect);
+router.use(protect, imsOnly);
 
 router.get("/brands/list", getBrands);
 router.patch("/bulk/update", bulkPatchProducts);

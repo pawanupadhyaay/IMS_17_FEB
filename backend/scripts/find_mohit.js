@@ -1,9 +1,10 @@
+require("dotenv").config();
 const mongoose = require("mongoose");
 
 async function updateMohitParent() {
   try {
     await mongoose.connect(
-      "mongodb+srv://omrie:Nay%23N2.u%40NGw3_y@cluster0.x28tqcf.mongodb.net/IMS?retryWrites=true&w=majority"
+      process.env.MONGODB_URI
     );
     console.log("Connected to DB");
 

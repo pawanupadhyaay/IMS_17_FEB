@@ -1,10 +1,11 @@
+require("dotenv").config();
 const mongoose = require("mongoose");
 const ActivityLog = require("../models/ActivityLog");
 require("../models/Product");
 
 const testAggregation = async () => {
   try {
-    const liveUri = "mongodb+srv://atraskiWeb:AtraskiWeb%402025@cluster0.rwy3f.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+    const liveUri = process.env.MONGODB_URI;
     await mongoose.connect(liveUri);
     console.log("Connected successfully!");
 

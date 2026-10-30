@@ -15,12 +15,13 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Create user
+    // Create user (public sign-up is always a customer; IMS staff are created by the owner)
     const user = await User.create({
       name,
       email,
       mobile,
       password,
+      role: "user",
     });
 
     if (user) {
@@ -427,6 +428,11 @@ const sendPhoneOtp = async (req, res) => {
       return res.status(400).json({ message: "Please provide a valid 10-digit mobile number" });
     }
 
+    // No SMS provider is connected yet, so the code can't reach the customer in production
+    if (process.env.NODE_ENV === "production") {
+      return res.status(503).json({ message: "Phone login is not available yet. Please log in with your email." });
+    }
+
     // Generate 6-digit OTP code
     const otpValue = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -649,6 +655,9 @@ const sendEmailOtp = async (req, res) => {
 
     // Send email using our verified Hostinger SMTP
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      if (process.env.NODE_ENV === "production") {
+        return res.status(503).json({ message: "Email service is not configured" });
+      }
       console.log(`\n📧 [EMAIL OTP SIMULATION] OTP Code for ${cleanEmail} is: [ ${otpValue} ]\n`);
       return res.status(200).json({
         success: true,

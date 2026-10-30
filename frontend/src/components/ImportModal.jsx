@@ -135,8 +135,9 @@ const ImportModal = ({ isOpen, onClose, onUploadSuccess }) => {
               How Import Works:
             </h4>
             <ul>
-              <li><strong>SKU Tracking:</strong> Products are matched strictly using the <code>sku</code> column. Ensure the SKU exists in the database.</li>
-              <li><strong>Data Updates:</strong> Non-empty columns in the CSV will overwrite matching properties on the server.</li>
+              <li><strong>SKU Tracking:</strong> Products are matched using the <code>sku</code> column. A SKU that is not in the IMS is added as a new product (brand is required).</li>
+              <li><strong>Data Updates:</strong> Only non-empty columns in the CSV overwrite the product. Empty cells never clear existing data.</li>
+              <li><strong>Errors:</strong> Valid rows are saved; rows with problems are skipped and listed with their row number and reason.</li>
               <li><strong>Multi-Row Images:</strong> Multiple image rows with the same SKU are merged automatically into the product's image collection based on <code>imagePosition</code>.</li>
             </ul>
             <button 
@@ -238,30 +239,43 @@ const ImportModal = ({ isOpen, onClose, onUploadSuccess }) => {
                   <span className="count-num">{result.totalProcessed}</span>
                   <span className="count-label">SKUs Parsed</span>
                 </div>
+                {result.createdCount !== undefined && (
+                  <div className="results-card updated">
+                    <span className="count-num">{result.createdCount}</span>
+                    <span className="count-label">Created</span>
+                  </div>
+                )}
                 <div className="results-card updated">
                   <span className="count-num">{result.updatedCount}</span>
                   <span className="count-label">Updated</span>
                 </div>
                 <div className="results-card skipped">
-                  <span className="count-num">{result.skippedCount}</span>
-                  <span className="count-label">Skipped</span>
+                  <span className="count-num">{result.unchangedCount ?? result.skippedCount}</span>
+                  <span className="count-label">{result.unchangedCount !== undefined ? 'No Change' : 'Skipped'}</span>
                 </div>
                 {result.failedCount > 0 && (
                   <div className="results-card failed">
                     <span className="count-num">{result.failedCount}</span>
-                    <span className="count-label">Failed</span>
+                    <span className="count-label">With Errors</span>
                   </div>
                 )}
               </div>
 
+              {result.imagesInBackground > 0 && (
+                <p className="import-images-note">
+                  Images for {result.imagesInBackground} product{result.imagesInBackground === 1 ? '' : 's'} are being uploaded in the background and will appear in a minute or two.
+                </p>
+              )}
+
               {/* Error list for individual rows */}
               {result.errors && result.errors.length > 0 && (
                 <div className="import-errors-log">
-                  <h5>Row Errors Log:</h5>
+                  <h5>Rows not imported ({result.errors.length}) – fix these in the sheet and import again:</h5>
                   <div className="errors-log-list">
                     {result.errors.map((err, i) => (
                       <div key={i} className="error-log-item">
-                        <strong>SKU {err.sku}:</strong> {err.error}
+                        {err.row && <span className="error-log-row">Row {err.row}</span>}
+                        <strong>{err.sku ? `SKU ${err.sku}` : 'No SKU'}:</strong> {err.error}
                       </div>
                     ))}
                   </div>

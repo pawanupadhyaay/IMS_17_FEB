@@ -799,5 +799,6 @@ module.exports = {
   bulkPatchProducts,
   bulkDeleteProducts,
   updateDashboardStatsInBackground,
+  clearBrandsCache,
 };
 

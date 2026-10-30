@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const { protect } = require('../middleware/auth')
+const { protect, imsOnly } = require('../middleware/auth')
 const {
   createActivityLog,
   getActivityLogs,
@@ -8,7 +8,7 @@ const {
 } = require('../controllers/activityLogController')
 
 // All routes require authentication
-router.use(protect)
+router.use(protect, imsOnly)
 
 router.post('/', createActivityLog)
 router.get('/', getActivityLogs)
