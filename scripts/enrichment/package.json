@@ -1,0 +1,15 @@
+{
+  "name": "samay-enrichment",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Official-brand product enrichment pipelines for Samay IMS",
+  "type": "commonjs",
+  "scripts": {
+    "balmain": "node run-balmain.js",
+    "balmain:sample": "node run-balmain.js B48303382 --html fixtures/B48303382.html",
+    "preview": "node preview-server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

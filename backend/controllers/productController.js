@@ -5,7 +5,11 @@ const ActivityLog = require("../models/ActivityLog");
 const { logActivity } = require("../utils/logActivity");
 const { migrateLegacyImages, migrateLegacyImagesInline } = require("../utils/migrateLegacyImages");
 const { compareProductChanges } = require("../utils/compareProductChanges");
-const { isStorefrontEligible, hasMinimalStorefrontData } = require("../utils/storeEligibility");
+const {
+  isStorefrontEligible,
+  hasMinimalStorefrontData,
+  storefrontImageMongoCondition,
+} = require("../utils/storeEligibility");
 const { migrateUrlsToDoSpaces, migrateUrlsToDoSpacesInBackground } = require("../utils/doSpacesImageMigrator");
 const { canAccessBrand, staffWriteError } = require("../utils/staffPermissions");
 
@@ -55,6 +59,9 @@ const getProducts = async (req, res) => {
       sortOrder = "desc",
       startDate,
       endDate,
+      isPublished,
+      missingImages,
+      missingDescription,
     } = req.query;
 
     // Build filter
@@ -107,6 +114,54 @@ const getProducts = async (req, res) => {
       }
     }
 
+    const wantPublished =
+      isPublished === "true" || isPublished === true
+        ? true
+        : isPublished === "false" || isPublished === false
+          ? false
+          : undefined;
+    if (wantPublished !== undefined) {
+      filter.isPublished = wantPublished;
+    }
+
+    // Header counts for New Listings: unpublished scope before incomplete toggles
+    let listingMeta = null;
+    if (wantPublished === false) {
+      const unpublishedScope = { ...filter };
+      const [unpublishedTotal, missingImagesCount] = await Promise.all([
+        Product.countDocuments(unpublishedScope),
+        Product.countDocuments({
+          ...unpublishedScope,
+          $nor: storefrontImageMongoCondition().$or,
+        }),
+      ]);
+      listingMeta = { unpublishedTotal, missingImagesCount };
+    }
+
+    const wantMissingImages =
+      missingImages === "1" || missingImages === "true" || missingImages === true;
+    if (wantMissingImages) {
+      filter.$nor = storefrontImageMongoCondition().$or;
+    }
+
+    // Thin/empty description (< 40 trimmed chars)
+    const wantMissingDescription =
+      missingDescription === "1" ||
+      missingDescription === "true" ||
+      missingDescription === true;
+    if (wantMissingDescription) {
+      filter.$expr = {
+        $lt: [
+          {
+            $strLenCP: {
+              $trim: { input: { $ifNull: ["$description", ""] } },
+            },
+          },
+          40,
+        ],
+      };
+    }
+
     // Calculate pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -124,7 +179,11 @@ const getProducts = async (req, res) => {
     // Get products with projection - only fetch fields needed for list view
     // Include legacy fields for migration: imageUrl, image.url
     // This reduces payload size significantly (especially for 10k+ products)
-    const projection = "title brand sku category inventory price oldPrice images imageUrl image.url createdAt warrantyPeriod waterResistance dialColor strapColor movement gender caseMaterial caseShape strapMaterial";
+    let projection =
+      "title brand sku category inventory price oldPrice images imageUrl image.url createdAt warrantyPeriod waterResistance dialColor strapColor movement gender caseMaterial caseShape strapMaterial isPublished";
+    if (wantPublished === false || wantMissingDescription) {
+      projection += " description seoTitle seoDescription";
+    }
     const products = await Product.find(filter)
       .select(projection)
       .sort(sortObj)
@@ -171,6 +230,7 @@ const getProducts = async (req, res) => {
       success: true,
       data: products,
       brandStats,
+      listingMeta,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -233,7 +293,23 @@ const createProduct = async (req, res) => {
 
     applyImageNormalization(productData);
 
-    productData.isPublished = hasMinimalStorefrontData(productData);
+    // New products stay unpublished until owner/admin Approves & publishes.
+    // Explicit isPublished in body is honored only for owner/admin.
+    const createRole = String(req.user?.role || "").toLowerCase();
+    if (
+      productData.isPublished === true &&
+      createRole !== "owner" &&
+      createRole !== "admin"
+    ) {
+      productData.isPublished = false;
+    } else if (productData.isPublished === undefined) {
+      productData.isPublished = false;
+    } else if (
+      productData.isPublished === true &&
+      !hasMinimalStorefrontData(productData)
+    ) {
+      productData.isPublished = false;
+    }
 
     // If oldPrice not provided, set it to price
     if (productData.oldPrice === undefined || productData.oldPrice === null || productData.oldPrice === 0) {
@@ -314,7 +390,13 @@ const updateProduct = async (req, res) => {
     delete updateData.samePriceChecked;
 
     const mergedForStore = { ...currentProduct.toObject(), ...updateData };
-    updateData.isPublished = hasMinimalStorefrontData(mergedForStore);
+    // Never auto-promote to live — owner/admin must Approve & publish.
+    // Demote when product no longer meets title+image eligibility.
+    if (!hasMinimalStorefrontData(mergedForStore)) {
+      updateData.isPublished = false;
+    } else if (updateData.isPublished === undefined) {
+      delete updateData.isPublished;
+    }
 
     // Track changes before updating
     const changes = compareProductChanges(currentProduct, updateData);
@@ -453,7 +535,10 @@ const patchProduct = async (req, res) => {
 
     // Create a temporary product object with updates to compare changes & publish status
     const updatedProductData = { ...currentProduct.toObject(), ...updateObj };
-    updateObj.isPublished = hasMinimalStorefrontData(updatedProductData);
+    // Never auto-promote to live — owner/admin must Approve & publish.
+    if (!hasMinimalStorefrontData(updatedProductData)) {
+      updateObj.isPublished = false;
+    }
 
     // Track changes before updating
     const changes = compareProductChanges(currentProduct, updatedProductData);
@@ -579,10 +664,12 @@ const bulkPatchProducts = async (req, res) => {
         }
       }
 
-      // Check publish eligibility
+      // Demote when ineligible; never auto-promote (Approve & publish endpoint)
       const updatedProductData = { ...currentProduct.toObject(), ...productUpdateObj };
       const eligible = hasMinimalStorefrontData(updatedProductData);
-      productUpdateObj.isPublished = eligible;
+      if (!eligible) {
+        productUpdateObj.isPublished = false;
+      }
 
       // Track changes
       const changes = compareProductChanges(currentProduct, updatedProductData);
@@ -751,9 +838,16 @@ const getBrands = async (req, res) => {
       return res.json({ success: true, data: brandsCache });
     }
 
-    // Fetch brands from database (using index for faster query)
-    const brands = await Product.distinct("brand", { brand: { $ne: "" } });
-    const sortedBrands = brands.sort();
+    // Fetch brands from database (using index for faster query).
+    // Exclude null/empty — distinct() still returns null when some products lack brand,
+    // and callers that sort with localeCompare will crash on null.
+    const brands = await Product.distinct("brand", {
+      brand: { $type: "string", $nin: ["", null] },
+    });
+    const sortedBrands = brands
+      .filter((b) => typeof b === "string" && b.trim())
+      .map((b) => b.trim())
+      .sort((a, b) => a.localeCompare(b));
 
     // Cache the result
     brandsCache = sortedBrands;

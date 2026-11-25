@@ -1,6 +1,25 @@
+const fs = require("fs");
+const path = require("path");
+const crypto = require("crypto");
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 const axios = require("axios");
 const sharp = require("sharp");
+
+/** Magento default placeholder JPEG md5 — never upload this as a product photo */
+const MAGENTO_PLACEHOLDER_MD5 = "e8be96b92892b36d827e312fc4c4f354";
+const PLACEHOLDER_URL_RE =
+  /placeholder|placehold\.co|via\.placeholder|\/placeholder\/|catalog\/product\/placeholder|Magento_Catalog\/images\/product\/placeholder/i;
+const MIN_SOURCE_BYTES = 8000;
+
+function looksLikePlaceholderUrl(url) {
+  return PLACEHOLDER_URL_RE.test(String(url || ""));
+}
+
+function isPlaceholderBuffer(buf) {
+  if (!buf || buf.length < 100) return true;
+  if (buf.length < MIN_SOURCE_BYTES) return true;
+  return crypto.createHash("md5").update(buf).digest("hex") === MAGENTO_PLACEHOLDER_MD5;
+}
 
 // Initialize S3 client for DigitalOcean Spaces
 let s3Client = null;
@@ -64,6 +83,12 @@ async function uploadUrlToSpaces(url) {
     return url;
   }
 
+  // 3. Never migrate Magento / generic placeholder URLs (they HTTP 200 as tiny JPEGs)
+  if (looksLikePlaceholderUrl(url)) {
+    console.warn(`⚠️ Skipping placeholder URL (not migrating): ${url.slice(0, 120)}`);
+    return "";
+  }
+
   const s3 = getS3Client();
   const bucket = process.env.DO_SPACES_BUCKET;
   const folder = process.env.DO_SPACES_FOLDER || "ims";
@@ -89,8 +114,17 @@ async function uploadUrlToSpaces(url) {
       },
     });
 
+    const sourceBuf = Buffer.from(response.data);
+    if (isPlaceholderBuffer(sourceBuf) || looksLikePlaceholderUrl(response.request?.res?.responseUrl || "")) {
+      console.warn(
+        `⚠️ Skipping Magento/tiny placeholder body (${sourceBuf.length}b) for ${url.slice(0, 100)}`
+      );
+      return "";
+    }
+
     console.log(`🛠️ Processing image with sharp (trim, 1:1 pad, white bg, webp)...`);
-    const processedBuffer = await sharp(Buffer.from(response.data))
+    // failOn none: some retailer JPEGs are mislabeled / odd containers that sharp rejects by default
+    const processedBuffer = await sharp(sourceBuf, { failOn: "none" })
       .trim({ threshold: 60 }) // Increased threshold to handle JPEG noise in grey backgrounds
       .resize(800, 800, {
         fit: 'contain',
@@ -98,6 +132,14 @@ async function uploadUrlToSpaces(url) {
       })
       .webp({ quality: 80 })
       .toBuffer();
+
+    // Post-process guard: collapsed near-white webp (~1.7–2KB) = placeholder survived trim
+    if (processedBuffer.length < MIN_SOURCE_BYTES) {
+      console.warn(
+        `⚠️ Skipping post-process tiny buffer (${processedBuffer.length}b) — likely placeholder: ${url.slice(0, 100)}`
+      );
+      return "";
+    }
 
     const mimeType = "image/webp";
     const ext = ".webp";
@@ -131,6 +173,65 @@ async function uploadUrlToSpaces(url) {
     // Fallback to original URL on failure so the save operation succeeds
     return url;
   }
+}
+
+/**
+ * Process a local image buffer/file and upload to DigitalOcean Spaces (WebP).
+ * @param {Buffer} buffer
+ * @returns {Promise<string>} public CDN URL or "" on failure
+ */
+async function uploadBufferToSpaces(buffer) {
+  const s3 = getS3Client();
+  const bucket = process.env.DO_SPACES_BUCKET;
+  const folder = process.env.DO_SPACES_FOLDER || "ims";
+  if (!s3 || !bucket || !buffer || !Buffer.isBuffer(buffer) || buffer.length < 100) {
+    return "";
+  }
+
+  try {
+    const processedBuffer = await sharp(buffer, { failOn: "none" })
+      .trim({ threshold: 60 })
+      .resize(800, 800, {
+        fit: "contain",
+        background: { r: 255, g: 255, b: 255, alpha: 1 },
+      })
+      .webp({ quality: 80 })
+      .toBuffer();
+
+    const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+    const fileKey = `${folder}/${uniqueId}.webp`;
+
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: fileKey,
+        Body: processedBuffer,
+        ContentType: "image/webp",
+        ACL: "public-read",
+      })
+    );
+
+    const endpointUrl = new URL(process.env.DO_SPACES_ENDPOINT);
+    const hostParts = endpointUrl.host.split(".");
+    const cdnHost = `${hostParts[0]}.cdn.${hostParts.slice(1).join(".")}`;
+    return `https://${bucket}.${cdnHost}/${fileKey}`;
+  } catch (err) {
+    console.error("❌ Failed to upload buffer to Spaces:", err.message);
+    return "";
+  }
+}
+
+/**
+ * Upload a local filesystem image to DigitalOcean Spaces.
+ * @param {string} filePath
+ * @returns {Promise<string>}
+ */
+async function uploadLocalFileToSpaces(filePath) {
+  if (!filePath || typeof filePath !== "string") return "";
+  const abs = path.resolve(filePath);
+  if (!fs.existsSync(abs)) return "";
+  const buffer = fs.readFileSync(abs);
+  return uploadBufferToSpaces(buffer);
 }
 
 /**
@@ -194,4 +295,6 @@ module.exports = {
   migrateUrlsToDoSpaces,
   migrateUrlsToDoSpacesInBackground,
   uploadUrlToSpaces,
+  uploadBufferToSpaces,
+  uploadLocalFileToSpaces,
 };

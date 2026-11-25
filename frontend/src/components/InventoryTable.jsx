@@ -2,9 +2,23 @@ import { memo } from 'react'
 import { FixedSizeList as List } from 'react-window'
 import ProductThumbnail from './ProductThumbnail'
 import { getDisplayBrand } from '../utils/brandUtils'
+import { isEnrichableProduct } from '../utils/enrichmentBrands'
 import './InventoryTable.css'
 
-const InventoryTable = memo(({ products, onView, onEdit, onDelete, loading, selectedIds, onSelectionChange, page = 1, limit = 50, canEdit = true }) => {
+const InventoryTable = memo(({
+  products,
+  onView,
+  onEdit,
+  onDelete,
+  onGetDetails,
+  enrichmentBusy = null,
+  loading,
+  selectedIds,
+  onSelectionChange,
+  page = 1,
+  limit = 50,
+  canEdit = true,
+}) => {
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -21,6 +35,8 @@ const InventoryTable = memo(({ products, onView, onEdit, onDelete, loading, sele
     const onView = data.onView
     const onEdit = data.onEdit
     const onDelete = data.onDelete
+    const onGetDetails = data.onGetDetails
+    const enrichmentBusy = data.enrichmentBusy
     const page = data.page || 1
     const limit = data.limit || 50
     const canEdit = data.canEdit ?? true
@@ -30,6 +46,8 @@ const InventoryTable = memo(({ products, onView, onEdit, onDelete, loading, sele
     const totalValue = (product.inventory || 0) * (product.price || 0)
     const serial = (page - 1) * limit + index + 1
     const isSelected = selectedIds?.has(product._id) || false
+    const enrichable = isEnrichableProduct(product)
+    const gettingDetails = enrichmentBusy === `scan-${product._id}`
 
     const handleCheckboxChange = (e) => {
       const newSelectedIds = new Set(selectedIds || [])
@@ -100,6 +118,17 @@ const InventoryTable = memo(({ products, onView, onEdit, onDelete, loading, sele
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
               </button>
+              {enrichable && typeof onGetDetails === 'function' && (
+                <button
+                  type="button"
+                  onClick={() => onGetDetails(product)}
+                  className="action-btn enrich-btn"
+                  disabled={!!enrichmentBusy}
+                  title="Get details from brand site (fill empty fields only; does not publish)"
+                >
+                  {gettingDetails ? '…' : 'Details'}
+                </button>
+              )}
               <button
                 onClick={() => onDelete(product)}
                 className="action-btn delete-btn"
@@ -165,7 +194,19 @@ const InventoryTable = memo(({ products, onView, onEdit, onDelete, loading, sele
           itemCount={products.length}
           itemSize={50}
           width="100%"
-          itemData={{ products, selectedIds, onSelectionChange, onView, onEdit, onDelete, page, limit, canEdit }}
+          itemData={{
+            products,
+            selectedIds,
+            onSelectionChange,
+            onView,
+            onEdit,
+            onDelete,
+            onGetDetails,
+            enrichmentBusy,
+            page,
+            limit,
+            canEdit,
+          }}
         >
           {Row}
         </List>

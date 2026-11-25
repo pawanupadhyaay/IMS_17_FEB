@@ -1,0 +1,400 @@
+.enrich-status-page {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 2rem;
+}
+
+.enrich-status-header {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.enrich-status-header .breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: #666;
+  width: 100%;
+}
+
+.enrich-status-header .breadcrumb-link {
+  background: none;
+  border: none;
+  color: #4a90e2;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.enrich-status-header .breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+.enrich-status-header .breadcrumb-separator {
+  color: #999;
+}
+
+.enrich-status-header .breadcrumb-current {
+  color: #333;
+  font-weight: 500;
+}
+
+.enrich-status-header .page-title-section {
+  flex: 1;
+}
+
+.enrich-status-header .page-title-section h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+  color: #333;
+}
+
+.enrich-status-header .page-subtitle,
+.enrich-detail-head .page-subtitle {
+  margin: 0;
+  color: #666;
+  font-size: 1rem;
+}
+
+.enrich-status-header .header-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.enrich-status-header .btn-back,
+.enrich-status-header .btn-secondary,
+.enrich-detail-head .btn-secondary,
+.btn-view {
+  padding: 0.65rem 1.25rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.enrich-status-header .btn-back {
+  background: #4a90e2;
+  color: white;
+}
+
+.enrich-status-header .btn-back:hover {
+  background: #357abd;
+}
+
+.enrich-status-header .btn-secondary,
+.enrich-detail-head .btn-secondary {
+  background: #eef2f7;
+  color: #1e293b;
+}
+
+.enrich-status-header .btn-secondary:hover,
+.enrich-detail-head .btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+.enrich-status-counts {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.enrich-status-counts .count-item {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 0.85rem 1.25rem;
+  min-width: 120px;
+}
+
+.enrich-status-counts .count-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  line-height: 1.2;
+}
+
+.enrich-status-counts .count-label {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.enrich-status-counts .count-done .count-value {
+  color: #15803d;
+}
+
+.enrich-status-counts .count-left .count-value {
+  color: #b45309;
+}
+
+.enrich-status-counts .count-failed .count-value {
+  color: #b91c1c;
+}
+
+.enrich-status-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  padding: 0.85rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.enrich-status-table-wrap {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+.enrich-status-loading {
+  padding: 2rem;
+  color: #666;
+  text-align: center;
+}
+
+.enrich-status-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.enrich-status-table th,
+.enrich-status-table td {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.enrich-status-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.enrich-status-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.enrich-status-table tbody tr.is-selected {
+  background: #eff6ff;
+}
+
+.enrich-status-table .brand-cell {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.enrich-status-table .num-done {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.enrich-status-table .num-left {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.enrich-status-table .num-failed {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.batch-ok {
+  color: #15803d;
+  font-weight: 500;
+}
+
+.batch-missing {
+  color: #94a3b8;
+}
+
+.btn-view {
+  background: #0f172a;
+  color: white;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+}
+
+.btn-view:hover {
+  background: #1e293b;
+}
+
+.enrich-detail-panel {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.enrich-detail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.enrich-detail-head h2 {
+  margin: 0 0 0.35rem 0;
+  font-size: 1.35rem;
+  color: #0f172a;
+}
+
+.enrich-bucket-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.bucket-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.bucket-tab .bucket-count {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.bucket-tab.is-active {
+  border-color: #94a3b8;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.bucket-tab.bucket-done.is-active {
+  border-color: #86efac;
+  color: #166534;
+}
+
+.bucket-tab.bucket-left.is-active {
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+.bucket-tab.bucket-failed.is-active {
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.enrich-detail-body {
+  max-height: 420px;
+  overflow: auto;
+  border: 1px solid #eee;
+  border-radius: 6px;
+}
+
+.enrich-empty-skus {
+  margin: 0;
+  padding: 1.25rem;
+  color: #64748b;
+}
+
+.enrich-sku-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.enrich-sku-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: baseline;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.9rem;
+}
+
+.enrich-sku-list li:last-child {
+  border-bottom: none;
+}
+
+.enrich-sku-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.enrich-sku-meta {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.enrich-sku-tag {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #e2e8f0;
+  color: #475569;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+.enrich-sku-reason {
+  color: #b91c1c;
+  font-size: 0.8rem;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.enrich-sku-title {
+  color: #64748b;
+  flex: 1 1 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.enrich-status-footnote {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  max-width: 720px;
+}
+
+@media (max-width: 720px) {
+  .enrich-status-page {
+    padding: 1rem;
+  }
+
+  .enrich-status-header {
+    padding: 1.25rem;
+  }
+
+  .enrich-status-header .page-title-section h1 {
+    font-size: 1.5rem;
+  }
+}

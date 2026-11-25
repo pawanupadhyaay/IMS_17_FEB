@@ -19,8 +19,10 @@ const MobileHeader = ({ user, onLogout, onCreateProduct, onExportCSV, onImportCS
     if (action === 'create') onCreateProduct()
     else if (action === 'export') onExportCSV()
     else if (action === 'import') onImportCSV()
+    else if (action === 'newlistings') navigate('/new-listings')
+    else if (action === 'enrichment') navigate('/enrichment-status')
     else if (action === 'activity') navigate('/activity-history')
-    else if (action === 'mystore') navigate('/my-store')
+    else if (action === 'mystore') navigate('/my-store/orders')
     else if (action === 'staffs') navigate('/my-store/staffs')
     else if (action === 'logout') onLogout()
   }
@@ -72,21 +74,29 @@ const MobileHeader = ({ user, onLogout, onCreateProduct, onExportCSV, onImportCS
               <span className="menu-icon">📤</span>
               <span>Export CSV</span>
             </button>
+            <button className="mobile-menu-item" onClick={() => handleMenuAction('newlistings')}>
+              <span className="menu-icon">📝</span>
+              <span>New listings</span>
+            </button>
+            <button className="mobile-menu-item" onClick={() => handleMenuAction('enrichment')}>
+              <span className="menu-icon">🔎</span>
+              <span>Enrichment status</span>
+            </button>
             <button className="mobile-menu-item" onClick={() => handleMenuAction('activity')}>
               <span className="menu-icon">📋</span>
               <span>Activity History</span>
             </button>
+            {['owner', 'admin'].includes(user?.role?.toLowerCase()) && (
+              <button className="mobile-menu-item" onClick={() => handleMenuAction('mystore')}>
+                <span className="menu-icon">🏪</span>
+                <span style={{ fontWeight: 'bold' }}>My Store</span>
+              </button>
+            )}
             {user?.role?.toLowerCase() === 'owner' && (
-              <>
-                <button className="mobile-menu-item" onClick={() => handleMenuAction('mystore')}>
-                  <span className="menu-icon">🏪</span>
-                  <span style={{ fontWeight: 'bold' }}>My Store</span>
-                </button>
-                <button className="mobile-menu-item" onClick={() => handleMenuAction('staffs')}>
-                  <span className="menu-icon">👥</span>
-                  <span style={{ fontWeight: 'bold' }}>Staff Management</span>
-                </button>
-              </>
+              <button className="mobile-menu-item" onClick={() => handleMenuAction('staffs')}>
+                <span className="menu-icon">👥</span>
+                <span style={{ fontWeight: 'bold' }}>Staff Management</span>
+              </button>
             )}
             <div className="mobile-menu-divider"></div>
             <button className="mobile-menu-item logout" onClick={() => handleMenuAction('logout')}>

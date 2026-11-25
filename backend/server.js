@@ -82,6 +82,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 const brandRoutes = require("./routes/brandRoutes");
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/products", require("./routes/productRoutes"));
+app.use("/api/enrichment", require("./routes/enrichmentRoutes"));
 app.use("/api/store/products", require("./routes/storeProductRoutes"));
 app.use("/api/store/brands", brandRoutes);
 app.use("/api/store", require("./routes/storeOrderRoutes"));

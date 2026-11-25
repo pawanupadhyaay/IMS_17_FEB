@@ -183,6 +183,7 @@ export default function BrandCollection() {
   const { brandSlug } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
   const pageParam = searchParams.get('page')
+  const showSoldOut = searchParams.get('showSoldOut') === '1'
   const currentPage = Math.max(1, parseInt(pageParam, 10) || 1)
 
   const [products, setProducts] = useState([])
@@ -236,6 +237,7 @@ export default function BrandCollection() {
       brand: brandName,
       brandSlug,
     })
+    if (showSoldOut) qs.set('showSoldOut', '1')
 
     fetch(`${API_BASE}/api/store/products/filters?${qs.toString()}`)
       .then((res) => res.json())
@@ -248,7 +250,7 @@ export default function BrandCollection() {
       .catch(() => {})
 
     return () => { cancelled = true }
-  }, [brandSlug, brandName])
+  }, [brandSlug, brandName, showSoldOut])
 
   // Fetch paginated + filtered + sorted products
   useEffect(() => {
@@ -281,6 +283,7 @@ export default function BrandCollection() {
       const vals = selectedByKey[k]
       if (vals && vals.length) params.set(k, vals.join(','))
     })
+    if (showSoldOut) params.set('showSoldOut', '1')
 
     fetch(`${API_BASE}/api/store/products?${params.toString()}`)
       .then((res) => res.json())
@@ -313,8 +316,17 @@ export default function BrandCollection() {
     brandName,
     currentPage,
     sortBy,
+    showSoldOut,
     ...FILTER_KEYS.map((k) => (selectedByKey[k] || []).join(',')),
   ])
+
+  const handleShowSoldOutChange = (checked) => {
+    const next = new URLSearchParams(searchParams)
+    if (checked) next.set('showSoldOut', '1')
+    else next.delete('showSoldOut')
+    next.set('page', '1')
+    setSearchParams(next, { replace: false })
+  }
 
   const updateFilterParam = (filterKey, values) => {
     const next = new URLSearchParams(searchParams)
@@ -340,9 +352,10 @@ export default function BrandCollection() {
   }
 
   const clearAllFilters = () => {
-    // We clear all filters but keep the page at 1. The brand context is preserved by the URL params/slug.
+    // Clear facet filters; keep sold-out preference. Brand context comes from the route slug.
     const next = new URLSearchParams()
     next.set('page', '1')
+    if (showSoldOut) next.set('showSoldOut', '1')
     setSearchParams(next, { replace: false })
   }
 
@@ -399,8 +412,17 @@ export default function BrandCollection() {
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 border-b border-neutral-100 pb-8">
           <span className="text-[10px] sm:text-[12px] font-bold text-neutral-400 uppercase tracking-[0.2em]">{total} Products</span>
 
-          {/* Filter & Sort Button */}
-          <div className="flex">
+          {/* Filter & Sort + sold-out toggle */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
+            <label className="flex items-center gap-2 cursor-pointer select-none text-[11px] font-medium text-neutral-600">
+              <input
+                type="checkbox"
+                checked={showSoldOut}
+                onChange={(e) => handleShowSoldOutChange(e.target.checked)}
+                className="size-3.5 rounded border-neutral-300 text-black accent-black"
+              />
+              Show sold out products
+            </label>
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}

@@ -1,10 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
 import PrivateRoute from './components/PrivateRoute'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import ActivityHistory from './pages/ActivityHistory'
+import NewListings from './pages/NewListings'
+import EnrichmentStatus from './pages/EnrichmentStatus'
 import Footer from './components/Footer'
 import MyStoreLayout from './components/my-store/MyStoreLayout'
 import StoreDashboard from './pages/my-store/StoreDashboard'
@@ -22,6 +25,7 @@ import './App.css'
 function App() {
   return (
     <AuthProvider>
+      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
       <Router>
         <div className="app">
           <div className="app-main">
@@ -41,6 +45,22 @@ function App() {
                 element={
                   <PrivateRoute>
                     <ActivityHistory />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/new-listings"
+                element={
+                  <PrivateRoute>
+                    <NewListings />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/enrichment-status"
+                element={
+                  <PrivateRoute>
+                    <EnrichmentStatus />
                   </PrivateRoute>
                 }
               />

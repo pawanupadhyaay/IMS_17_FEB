@@ -1,12 +1,25 @@
-import { useState, useMemo } from 'react'
-import { useContext } from 'react'
+import { useState, useMemo, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'react-hot-toast'
 import { useDebounce } from '../hooks/useDebounce'
 import { useIsMobile } from '../hooks/useMediaQuery'
 import { AuthContext } from '../context/AuthContext'
 import { getDisplayBrand } from '../utils/brandUtils'
-import { useProducts, useDeleteProduct, usePatchProduct, usePatchProductsBulk, useDeleteProductsBulk } from '../hooks/useProducts'
+import {
+  isEnrichableProduct,
+  formatEnrichmentToast,
+} from '../utils/enrichmentBrands'
+import {
+  useProducts,
+  useDeleteProduct,
+  usePatchProduct,
+  usePatchProductsBulk,
+  useDeleteProductsBulk,
+  productKeys,
+} from '../hooks/useProducts'
 import { useDashboardStats } from '../hooks/useDashboard'
+import { pullProductEnrichment } from '../services/productService'
 import { exportToCSV } from '../services/exportService'
 import InventoryTable from '../components/InventoryTable'
 import StatsCards from '../components/StatsCards'
@@ -47,6 +60,7 @@ const Dashboard = () => {
   const { user, logout } = useContext(AuthContext)
   const navigate = useNavigate()
   const isMobile = useIsMobile()
+  const queryClient = useQueryClient()
   const [filters, setFilters] = useState({
     brand: '',
     search: '',
@@ -70,6 +84,7 @@ const Dashboard = () => {
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [showExportModal, setShowExportModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
+  const [enrichmentBusy, setEnrichmentBusy] = useState(null)
 
   // Debounce search input (500ms)
   const debouncedSearch = useDebounce(filters.search, 500)
@@ -157,6 +172,15 @@ const Dashboard = () => {
     })
   }
 
+  const handleClearDateRange = () => {
+    setFilters((prev) => {
+      if (!prev.startDate && !prev.endDate) return prev
+      return { ...prev, startDate: '', endDate: '', page: 1 }
+    })
+  }
+
+  const hasDateRange = !!(filters.startDate || filters.endDate)
+
   const hasActiveFilters = useMemo(() => {
     return !!(
       filters.brand ||
@@ -170,6 +194,27 @@ const Dashboard = () => {
 
   const isOwner = user?.role?.toLowerCase() === 'owner'
   const canEditSeo = isOwner || user?.canEditSeo !== false
+  const canEditProducts =
+    user?.role?.toLowerCase() !== 'staff' || user?.canEditProducts !== false
+
+  const handleGetDetails = async (product) => {
+    if (!product?._id || !isEnrichableProduct(product) || !canEditProducts) return
+    setEnrichmentBusy(`scan-${product._id}`)
+    try {
+      const res = await pullProductEnrichment(product._id, { liveScrape: true })
+      toast.success(formatEnrichmentToast(res))
+      queryClient.invalidateQueries({ queryKey: productKeys.lists() })
+      if (showModal && selectedProduct?._id === product._id && res?.data?.product) {
+        setSelectedProduct(res.data.product)
+      }
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || err.message || 'Get details failed'
+      )
+    } finally {
+      setEnrichmentBusy(null)
+    }
+  }
 
   // Helper to extract unique custom options dynamically from all products in the database
   const getDynamicOptions = (field, defaultOptions) => {
@@ -510,28 +555,40 @@ const Dashboard = () => {
           </div>
           <div className="header-actions">
             <button
+              onClick={() => navigate('/new-listings')}
+              className="btn-activity-history"
+            >
+              New listings
+            </button>
+            <button
+              onClick={() => navigate('/enrichment-status')}
+              className="btn-activity-history"
+            >
+              Enrichment status
+            </button>
+            <button
               onClick={() => navigate('/activity-history')}
               className="btn-activity-history"
             >
               Activity History
             </button>
+            {['owner', 'admin'].includes(user?.role?.toLowerCase()) && (
+              <button
+                onClick={() => navigate('/my-store/orders')}
+                className="btn-my-store"
+                style={{ background: '#0a1638', color: 'white', border: 'none', padding: '0.4rem 1rem', borderRadius: '6px', cursor: 'pointer', marginRight: '8px', fontWeight: 'bold' }}
+              >
+                My Store
+              </button>
+            )}
             {user?.role?.toLowerCase() === 'owner' && (
-              <>
-                <button
-                  onClick={() => navigate('/my-store')}
-                  className="btn-my-store"
-                  style={{ background: '#0a1638', color: 'white', border: 'none', padding: '0.4rem 1rem', borderRadius: '6px', cursor: 'pointer', marginRight: '8px', fontWeight: 'bold' }}
-                >
-                  My Store
-                </button>
-                <button
-                  onClick={() => navigate('/my-store/staffs')}
-                  className="btn-staff-management"
-                  style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '0.4rem 1rem', borderRadius: '6px', cursor: 'pointer', marginRight: '8px', fontWeight: 'bold' }}
-                >
-                  Staff Management
-                </button>
-              </>
+              <button
+                onClick={() => navigate('/my-store/staffs')}
+                className="btn-staff-management"
+                style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '0.4rem 1rem', borderRadius: '6px', cursor: 'pointer', marginRight: '8px', fontWeight: 'bold' }}
+              >
+                Staff Management
+              </button>
             )}
             <span className="user-info">Welcome, {user?.name}</span>
             <button onClick={logout} className="logout-button">
@@ -667,17 +724,40 @@ const Dashboard = () => {
                     onChange={(e) => handleFilterChange('endDate', e.target.value)}
                     style={{ padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '13px', color: '#0a1638', outline: 'none', backgroundColor: '#ffffff' }}
                   />
-                  {(filters.startDate || filters.endDate) && (
-                    <button
-                      onClick={() => {
-                        setFilters(prev => ({ ...prev, startDate: '', endDate: '', page: 1 }))
-                      }}
-                      style={{ padding: '6px 12px', fontSize: '12px', fontWeight: '700', background: '#e2e8f0', border: 'none', borderRadius: '4px', cursor: 'pointer', color: '#475569' }}
-                      type="button"
-                    >
-                      Clear Range
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    disabled={!hasDateRange}
+                    onMouseDown={(e) => {
+                      // Blur date inputs first so the native picker cannot steal/cancel the click
+                      if (e.button !== 0 || !hasDateRange) return
+                      e.preventDefault()
+                      handleClearDateRange()
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      if (!hasDateRange) return
+                      handleClearDateRange()
+                    }}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      background: hasDateRange ? '#475569' : '#e2e8f0',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: hasDateRange ? 'pointer' : 'not-allowed',
+                      color: hasDateRange ? '#ffffff' : '#94a3b8',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (hasDateRange) e.currentTarget.style.backgroundColor = '#334155'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = hasDateRange ? '#475569' : '#e2e8f0'
+                    }}
+                  >
+                    Clear Range
+                  </button>
                 </div>
               </div>
             )}
@@ -693,12 +773,14 @@ const Dashboard = () => {
               onView={handleViewProduct}
               onEdit={handleEditProduct}
               onDelete={handleDeleteClick}
+              onGetDetails={canEditProducts ? handleGetDetails : undefined}
+              enrichmentBusy={enrichmentBusy}
               loading={productsLoading}
               selectedIds={selectedIds}
               onSelectionChange={setSelectedIds}
               page={pagination.page}
               limit={pagination.limit}
-              canEdit={user?.role?.toLowerCase() !== 'staff' || user?.canEditProducts !== false}
+              canEdit={canEditProducts}
             />
 
             {selectedIds.size > 0 && (
@@ -781,6 +863,14 @@ const Dashboard = () => {
           dynamicCaseShapes={dynamicCaseShapes}
           dynamicStrapMaterials={dynamicStrapMaterials}
           canEditSeo={canEditSeo}
+          onGetDetails={
+            selectedProduct &&
+            isEnrichableProduct(selectedProduct) &&
+            canEditProducts
+              ? () => handleGetDetails(selectedProduct)
+              : undefined
+          }
+          enrichmentBusy={enrichmentBusy}
         />
       )}
 

@@ -36,13 +36,22 @@ export const AuthProvider = ({ children }) => {
       if (!hasImsAccess(response.data.user)) throw new Error(NO_ACCESS_MESSAGE)
       setUser(response.data.user)
     } catch (error) {
-      // Clear any stale tokens from both storage locations
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token')
-        sessionStorage.removeItem('token')
+      const status = error.response?.status
+      // Only wipe the session on auth failures (or IMS role rejection).
+      // Network blips / aborts / 5xx must not force a login redirect.
+      const clearSession =
+        status === 401 ||
+        status === 403 ||
+        error.message === NO_ACCESS_MESSAGE
+      if (clearSession) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token')
+          sessionStorage.removeItem('token')
+        }
+        setToken(null)
+        setUser(null)
+        delete api.defaults.headers.common['Authorization']
       }
-      setToken(null)
-      delete api.defaults.headers.common['Authorization']
     } finally {
       setLoading(false)
     }

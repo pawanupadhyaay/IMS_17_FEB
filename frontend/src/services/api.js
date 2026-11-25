@@ -1,10 +1,10 @@
 import axios from 'axios'
 
-// Production backend URL
-const PRODUCTION_API_URL = 'http://localhost:5000'
+// Local default (macOS often binds :5000 to AirPlay Receiver → 403).
+// Prefer VITE_API_URL from .env.development.local / .env.
+const FALLBACK_API_URL = 'http://localhost:5055/api'
 
-// Use environment variable if available, otherwise use production URL
-const baseURL = import.meta.env.VITE_API_URL || PRODUCTION_API_URL
+const baseURL = import.meta.env.VITE_API_URL || FALLBACK_API_URL
 
 const api = axios.create({
   baseURL: baseURL,

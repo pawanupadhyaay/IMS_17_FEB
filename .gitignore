@@ -1,3 +1,28 @@
 # Local documentation (not for repo)
 explain_part.md
 Explain_Parth.md
+New_Joinee_Product_Enrichment_Task.md
+
+# Enrichment scrape outputs / staged assets (keep fixtures + scripts)
+scripts/enrichment/output/
+scripts/enrichment/images/
+
+# Legacy top-level enrichment/ is a redirect stub only — ignore any leftover artifacts
+enrichment/output/
+enrichment/fixtures/
+enrichment/scrapers/
+enrichment/lib/
+enrichment/input/
+enrichment/playbooks/
+
+# Cloudflare tunnel credentials (never commit)
+**/.cloudflared/
+scripts/enrichment/tunnel/*.json
+scripts/enrichment/tunnel/credentials*
+
+# Hostinger FTP deploy secrets (never commit)
+**/.env.deploy
+store-frontend/.env.deploy
+
+# Local scrape HTML fixtures (large; not needed on DO)
+scripts/enrichment/fixtures/

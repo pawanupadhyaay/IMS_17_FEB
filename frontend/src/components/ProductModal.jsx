@@ -39,8 +39,17 @@ const ProductModal = ({
   dynamicGenders = [],
   dynamicCaseShapes = [],
   dynamicStrapMaterials = [],
-  canEditSeo
+  canEditSeo,
+  canPublish = false,
+  onGetDetails,
+  /** @deprecated use onGetDetails */
+  onScanBalmain,
+  /** @deprecated use onGetDetails */
+  onScanTitan,
+  onApprovePublish,
+  enrichmentBusy = null,
 }) => {
+  const handleGetDetailsClick = onGetDetails || onScanBalmain || onScanTitan
   const { user } = useContext(AuthContext)
   const isBasicInfoReadOnly = mode === 'view' || (user?.role?.toLowerCase() === 'staff' && user?.canEditBasicInfo === false)
   const [formData, setFormData] = useState({
@@ -1199,6 +1208,34 @@ const ProductModal = ({
             <button type="button" onClick={onClose} className="btn-cancel">
               {isViewMode ? 'Close' : 'Cancel'}
             </button>
+            {typeof handleGetDetailsClick === 'function' && (
+              <button
+                type="button"
+                className="btn-cancel"
+                style={{ borderColor: '#0d9488', color: '#0f766e' }}
+                disabled={!!enrichmentBusy || loading}
+                onClick={handleGetDetailsClick}
+                title="Get details from brand site (fill empty fields only; does not publish)"
+              >
+                {enrichmentBusy === `scan-${product?._id}`
+                  ? 'Getting…'
+                  : 'Get details'}
+              </button>
+            )}
+            {canPublish && typeof onApprovePublish === 'function' && !product?.isPublished && (
+              <button
+                type="button"
+                className="btn-save"
+                style={{ background: '#15803d' }}
+                disabled={!!enrichmentBusy || loading}
+                onClick={onApprovePublish}
+                title="Approve & go live — isPublished immediately (sold-out OK)"
+              >
+                {enrichmentBusy === `pub-${product?._id}`
+                  ? 'Publishing…'
+                  : 'Approve & go live'}
+              </button>
+            )}
             {!isViewMode && (
               <button
                 type="submit"

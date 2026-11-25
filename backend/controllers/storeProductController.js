@@ -14,6 +14,21 @@ const getStorefrontFilters = (customFilters = {}) => {
   return getStrictStorefrontFilter(customFilters);
 };
 
+/** Query truthy check for showSoldOut=1|true|yes */
+const wantsShowSoldOut = (query = {}) =>
+  ["1", "true", "yes"].includes(String(query.showSoldOut || "").toLowerCase());
+
+/**
+ * Listings hide inventory<=0 by default. Detail endpoints must NOT use this
+ * so sold-out SKUs remain reachable via direct URL.
+ */
+const applyListingStockFilter = (filter, query = {}) => {
+  if (!wantsShowSoldOut(query)) {
+    filter.inventory = { $gt: 0 };
+  }
+  return filter;
+};
+
 
 const buildProductFilterFromQuery = async (query) => {
   const {
@@ -176,7 +191,7 @@ const listProducts = async (req, res) => {
 
     const customFilters = await buildProductFilterFromQuery(req.query);
 
-    const filter = getStorefrontFilters(customFilters);
+    const filter = applyListingStockFilter(getStorefrontFilters(customFilters), req.query);
 
     let sortOptions = { createdAt: -1 };
 
@@ -299,7 +314,10 @@ const getProductById = async (req, res) => {
 const getFeaturedProducts = async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 8, 24);
-    const filter = getStorefrontFilters({ featured: true });
+    const filter = applyListingStockFilter(
+      getStorefrontFilters({ featured: true }),
+      req.query
+    );
     const products = await Product.find(filter)
       .select("brand title slug price oldPrice inventory images image.url ratings numReviews")
       .sort({ createdAt: -1 })
@@ -347,7 +365,7 @@ const getNewArrivals = async (req, res) => {
       }
     }
 
-    const filter = getStorefrontFilters(customFilters);
+    const filter = applyListingStockFilter(getStorefrontFilters(customFilters), req.query);
     const products = await Product.find(filter)
       .select("brand title slug price oldPrice inventory images image.url ratings numReviews createdAt")
       .sort({ createdAt: -1 })
@@ -373,7 +391,7 @@ const getNewArrivals = async (req, res) => {
 const getFilters = async (req, res) => {
   try {
     const customFilters = await buildProductFilterFromQuery(req.query);
-    const filter = getStorefrontFilters(customFilters);
+    const filter = applyListingStockFilter(getStorefrontFilters(customFilters), req.query);
 
     const facets = {
       category: [{ $match: { category: { $ne: "" } } }, { $group: { _id: "$category", count: { $sum: 1 } } }],
@@ -425,7 +443,7 @@ const getSearchSuggestions = async (req, res) => {
 
     // 1. Generate Product Filter using Intelligent Parser
     const queryFilter = await buildProductFilterFromQuery({ search: q });
-    const filter = getStorefrontFilters(queryFilter);
+    const filter = applyListingStockFilter(getStorefrontFilters(queryFilter), req.query);
 
     // 2. Fetch Matching Products
     const products = await Product.find(filter)

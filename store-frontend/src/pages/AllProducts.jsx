@@ -179,6 +179,7 @@ export default function AllProducts() {
   const pageParam = searchParams.get('page')
   const searchParam = searchParams.get('search')
   const brandCategoryParam = searchParams.get('brandCategory')
+  const showSoldOut = searchParams.get('showSoldOut') === '1'
   const currentPage = Math.max(1, parseInt(pageParam, 10) || 1)
 
   const [products, setProducts] = useState([])
@@ -254,7 +255,10 @@ export default function AllProducts() {
   // Fetch filter options: try /filters first, else derive from a large product list
   useEffect(() => {
     let cancelled = false
-    fetch(`${API_BASE}/api/store/products/filters`)
+    const filterQs = new URLSearchParams()
+    if (showSoldOut) filterQs.set('showSoldOut', '1')
+    const filterQuery = filterQs.toString()
+    fetch(`${API_BASE}/api/store/products/filters${filterQuery ? `?${filterQuery}` : ''}`)
       .then((res) => {
         if (res.ok) return res.json()
         throw new Error('Not found')
@@ -281,7 +285,9 @@ export default function AllProducts() {
       .catch(() => {
         if (cancelled) return
         // Fallback: fetch many products and derive filter options
-        fetch(`${API_BASE}/api/store/products?limit=500&page=1`)
+        const fallbackQs = new URLSearchParams({ limit: '500', page: '1' })
+        if (showSoldOut) fallbackQs.set('showSoldOut', '1')
+        fetch(`${API_BASE}/api/store/products?${fallbackQs.toString()}`)
           .then((r) => r.json())
           .then((d) => {
             if (cancelled) return
@@ -292,7 +298,7 @@ export default function AllProducts() {
           .catch(() => { })
       })
     return () => { cancelled = true }
-  }, [])
+  }, [showSoldOut])
 
   const updateFilterParam = (filterKey, values) => {
     const next = new URLSearchParams(searchParams)
@@ -355,6 +361,7 @@ export default function AllProducts() {
     if (selectedWaterResistance.length) params.set('waterResistance', selectedWaterResistance.join(','))
     if (searchParam) params.set('search', searchParam)
     if (brandCategoryParam) params.set('brandCategory', brandCategoryParam)
+    if (showSoldOut) params.set('showSoldOut', '1')
 
     fetch(`${API_BASE}/api/store/products?${params.toString()}`)
       .then((res) => res.json())
@@ -395,7 +402,16 @@ export default function AllProducts() {
     selectedWaterResistance.join(','),
     searchParam || '',
     brandCategoryParam || '',
+    showSoldOut,
   ])
+
+  const handleShowSoldOutChange = (checked) => {
+    const next = new URLSearchParams(searchParams)
+    if (checked) next.set('showSoldOut', '1')
+    else next.delete('showSoldOut')
+    next.set('page', '1')
+    setSearchParams(next, { replace: false })
+  }
 
   const handlePageChange = (nextPage) => {
     const next = new URLSearchParams(searchParams)
@@ -436,8 +452,17 @@ export default function AllProducts() {
             <p className="mt-1 text-[10px] sm:text-[12px] uppercase tracking-[0.2em] text-neutral-400 font-bold">{total} timepieces</p>
           </div>
 
-          {/* Filter & Sort Button */}
-          <div className="flex">
+          {/* Filter & Sort + sold-out toggle */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-5">
+            <label className="flex items-center gap-2 cursor-pointer select-none text-[11px] font-medium text-neutral-600">
+              <input
+                type="checkbox"
+                checked={showSoldOut}
+                onChange={(e) => handleShowSoldOutChange(e.target.checked)}
+                className="size-3.5 rounded border-neutral-300 text-black accent-black"
+              />
+              Show sold out products
+            </label>
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
